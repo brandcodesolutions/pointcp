@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ponto Digital PRO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-light: #4895ef;
+      --primary-dark: #3a0ca3;
+      --success-color: #4cc9f0;
+      --warning-color: #f72585;
+      --secondary-color: #f8f9fa;
+      --text-color: #2b2d42;
+      --text-light: #8d99ae;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #dfe7f5 100%);
+      min-height: 100vh;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    .app-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background: var(--primary-color);
+      color: white;
+      padding: 25px 0;
+      border-radius: 0 0 20px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-light), var(--primary-dark));
+    }
+    
+    h1 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 2.2rem;
+      letter-spacing: 0.5px;
+    }
+    
+    .user-info {
+      margin-top: 15px;
+      font-weight: 300;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .ponto-btn {
+      padding: 18px 45px;
+      font-size: 1.2rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 220px;
+    }
+    
+    .ponto-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(67, 97, 238, 0.4);
+    }
+    
+    .ponto-btn:active {
+      transform: translateY(1px);
+    }
+    
+    .ponto-btn i {
+      margin-right: 10px;
+      font-size: 1.3rem;
+    }
+    
+    .status {
+      margin-top: 25px;
+      font-size: 1.1rem;
+      color: var(--text-light);
+    }
+    
+    .status strong {
+      color: var(--primary-dark);
+      font-weight: 500;
+    }
+    
+    .history {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .history h3 {
+      margin: 0;
+      color: var(--primary-dark);
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+    
+    #history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    #history-list li {
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      background: var(--secondary-color);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition);
+    }
+    
+    #history-list li.entrada {
+      border-left: 4px solid var(--success-color);
+    }
+    
+    #history-list li.saida {
+      border-left: 4px solid var(--warning-color);
+    }
+    
+    .registro-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .registro-horario {
+      font-weight: 500;
+      font-size: 1rem;
+    }
+    
+    .registro-tipo {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 3px;
+    }
+    
+    .registro-data {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    
+    .empty-history {
+      color: var(--text-light);
+      font-style: italic;
+      text-align: center;
+      padding: 30px;
+      background: none;
+      border: 1px dashed #ddd;
+      border-radius: 10px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      animation: modalFadeIn 0.3s ease-out;
+    }
+    
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .modal h2 {
+      margin-top: 0;
+      color: var(--primary-dark);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary-light);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .modal-btn.cancel {
+      background: #f1f1f1;
+      color: var(--text-color);
+      border: none;
+    }
+    
+    .modal-btn.confirm {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+    }
+    
+    .modal-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .auth-buttons {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .auth-btn {
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+    }
+    
+    .auth-btn.login {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+    
+    .auth-btn.register {
+      background: white;
+      color: var(--primary-color);
+    }
+    
+    .auth-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    .admin-panel {
+      margin-top: 30px;
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+    }
+    
+    .admin-panel h3 {
+      color: var(--primary-dark);
+      margin-top: 0;
+    }
+    
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .admin-btn {
+      padding: 10px 15px;
+      background: var(--primary-light);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .admin-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .send-report-btn {
+      margin-top: 20px;
+      padding: 12px 25px;
+      background: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .send-report-btn:hover {
+      background: #3aa8d8;
+    }
+    
+    @media (max-width: 768px) {
+      .app-container {
+        padding: 15px;
+      }
+      
+      header {
+        padding: 20px 0;
+        border-radius: 0 0 15px 15px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .container, .history {
+        padding: 20px;
+      }
+      
+      .ponto-btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        min-width: auto;
+      }
+      
+      #history-list li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .registro-data {
+        margin-top: 5px;
+      }
+    }
+    
+    @keyframes highlight {
+      0% { color: inherit; }
+      50% { color: var(--primary-color); transform: scale(1.05); }
+      100% { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <button class="logout-btn" id="logout-btn" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </button>
+      <div class="auth-buttons" id="auth-buttons">
+        <button class="auth-btn login" onclick="openAuthModal('login')">Login</button>
+        <button class="auth-btn register" onclick="openAuthModal('register')">Cadastre-se</button>
+      </div>
+      <h1>Ponto Digital PRO</h1>
+      <div class="user-info" id="user-info">Faça login para começar</div>
+    </header>
+
+    <div class="container" id="main-container" style="display: none;">
+      <button class="ponto-btn" id="ponto-btn">
+        <i class="fas fa-fingerprint"></i> Bater Ponto
+      </button>
+      <div class="status" id="status">Status: Aguardando primeiro registro</div>
+      
+      <button class="send-report-btn" id="send-report-btn">
+        <i class="fas fa-paper-plane"></i> Enviar Espelho de Ponto
+      </button>
+    </div>
+
+    <div class="history" id="history-container" style="display: none;">
+      <div class="history-header">
+        <h3>Histórico do Dia</h3>
+        <div id="total-hours">Horas trabalhadas: 00:00</div>
+      </div>
+      <ul id="history-list">
+        <li class="empty-history">Nenhum registro hoje</li>
+      </ul>
+    </div>
+
+    <div class="admin-panel" id="admin-panel" style="display: none;">
+      <h3>Painel Administrativo</h3>
+      <p>Bem-vindo, administrador. Aqui você pode gerenciar os registros.</p>
+      <div class="admin-actions">
+        <button class="admin-btn" onclick="exportRegistros()">
+          <i class="fas fa-file-export"></i> Exportar Registros
+        </button>
+        <button class="admin-btn" onclick="openRelatoriosModal()">
+          <i class="fas fa-chart-bar"></i> Gerar Relatórios
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de autenticação -->
+  <div class="modal" id="auth-modal">
+    <div class="modal-content">
+      <h2 id="auth-modal-title">Login</h2>
+      <form id="auth-form">
+        <div id="register-fields" style="display: none;">
+          <div class="form-group">
+            <label for="register-nome">Nome Completo</label>
+            <input type="text" id="register-nome" placeholder="Digite seu nome completo">
+          </div>
+          <div class="form-group">
+            <label for="register-setor">Setor</label>
+            <input type="text" id="register-setor" placeholder="Digite seu setor">
+          </div>
+          <div class="form-group">
+            <label for="register-gestor">Email do Gestor</label>
+            <input type="email" id="register-gestor" placeholder="Digite o email do seu gestor">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="auth-email">E-mail</label>
+          <input type="email" id="auth-email" required placeholder="Digite seu e-mail">
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Senha</label>
+          <input type="password" id="auth-password" required placeholder="Digite sua senha">
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="modal-btn cancel" onclick="closeAuthModal()">Cancelar</button>
+          <button type="submit" class="modal-btn confirm" id="auth-submit-btn">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de relatórios -->
+  <div class="modal" id="relatorios-modal">
+    <div class="modal-content">
+      <h2>Gerar Relatório</h2>
+      <div class="form-group">
+        <label for="relatorio-funcionario">Funcionário</label>
+        <select id="relatorio-funcionario" class="form-group input">
+          <option value="todos">Todos os funcionários</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="relatorio-periodo">Período</label>
+        <select id="relatorio-periodo" class="form-group input">
+          <option value="hoje">Hoje</option>
+          <option value="semana">Esta semana</option>
+          <option value="mes">Este mês</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+      <div id="custom-periodo" style="display: none;">
+        <div class="form-group">
+          <label for="relatorio-data-inicio">Data Início</label>
+          <input type="date" id="relatorio-data-inicio" class="form-group input">
+        </div>
+        <div class="form-group">
+          <label for="relatorio-data-fim">Data Fim</label>
+          <input type="date" id="relatorio-data-fim" class="form-group input">
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button type="button" class="modal-btn cancel" onclick="closeRelatoriosModal()">Cancelar</button>
+        <button type="button" class="modal-btn confirm" onclick="gerarRelatorio()">Gerar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de envio de espelho -->
+  <div class="modal" id="report-modal">
+    <div class="modal-content">
+      <h2>Enviar Espelho de Ponto</h2>
+      <div class="form-group">
+        <label for="report-gestor">Email do Gestor</label>
+        <input type="email" id="report-gestor" placeholder="Digite o email do gestor">
+      </div>
+      <div class="form-group">
+        <label for="report-start">Data Início</label>
+        <input type="date" id="report-start" class="form-group input">
+      </div>
+      <div class="form-group">
+        <label for="report-end">Data Fim</label>
+        <input type="date" id="report-end" class="form-group input">
+      </div>
+      <div class="modal-buttons">
+        <button type="button" class="modal-btn cancel" onclick="closeReportModal()">Cancelar</button>
+        <button type="button" class="modal-btn confirm" onclick="sendReport()">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    
+    // Configurações da API
+    const API_BASE_URL = 'http://localhost:3000/api';
+    
+    // Variáveis de estado
+    let currentUser = null;
+    let token = null;
+    let lastAction = null;
+    let registrosHoje = [];
+    let isAdmin = false;
+    
+    // Elementos DOM
+    const pontoBtn = document.getElementById('ponto-btn');
+    const statusEl = document.getElementById('status');
+    const historyList = document.getElementById('history-list');
+    const userInfoEl = document.getElementById('user-info');
+    const totalHoursEl = document.getElementById('total-hours');
+    const mainContainer = document.getElementById('main-container');
+    const historyContainer = document.getElementById('history-container');
+    const adminPanel = document.getElementById('admin-panel');
+    const authButtons = document.getElementById('auth-buttons');
+    const logoutBtn = document.getElementById('logout-btn');
+    const sendReportBtn = document.getElementById('send-report-btn');
+    
+    // Modais
+    const authModal = document.getElementById('auth-modal');
+    const authModalTitle = document.getElementById('auth-modal-title');
+    const authForm = document.getElementById('auth-form');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const registerFields = document.getElementById('register-fields');
+    const relatoriosModal = document.getElementById('relatorios-modal');
+    const reportModal = document.getElementById('report-modal');
+    
+    // Abrir modal de autenticação
+    function openAuthModal(type) {
+      authModal.style.display = 'flex';
+      
+      if (type === 'login') {
+        authModalTitle.textContent = 'Login';
+        authSubmitBtn.textContent = 'Entrar';
+        registerFields.style.display = 'none';
+      } else {
+        authModalTitle.textContent = 'Cadastre-se';
+        authSubmitBtn.textContent = 'Cadastrar';
+        registerFields.style.display = 'block';
+      }
+    }
+    
+    // Fechar modal de autenticação
+    function closeAuthModal() {
+      authModal.style.display = 'none';
+      authForm.reset();
+    }
+    
+    // Formulário de autenticação
+    authForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      
+      if (authSubmitBtn.textContent === 'Entrar') {
+        // Login
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            token = data.token;
+            currentUser = data.user;
+            isAdmin = data.user.isAdmin || false;
+            
+            // Salvar token e user no localStorage
+            localStorage.setItem('pontoToken', token);
+            localStorage.setItem('pontoUser', JSON.stringify(currentUser));
+            
+            // Atualizar UI
+            updateUIAfterLogin();
+            closeAuthModal();
+            
+            // Carregar registros do dia
+            await loadRegistrosHoje();
+          } else {
+            alert(data.message || 'Erro ao fazer login');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      } else {
+        // Cadastro
+        const nome = document.getElementById('register-nome').value;
+        const setor = document.getElementById('register-setor').value;
+        const emailGestor = document.getElementById('register-gestor').value;
+        
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nome, email, password, setor, emailGestor })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            alert('Cadastro realizado com sucesso! Faça login para continuar.');
+            openAuthModal('login');
+          } else {
+            alert(data.message || 'Erro ao cadastrar');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      }
+    });
+    
+    // Atualizar UI após login
+    function updateUIAfterLogin() {
+      authButtons.style.display = 'none';
+      logoutBtn.style.display = 'block';
+      mainContainer.style.display = 'block';
+      historyContainer.style.display = 'block';
+      
+      userInfoEl.textContent = `${currentUser.nome} - ${currentUser.setor}`;
+      
+      if (isAdmin) {
+        adminPanel.style.display = 'block';
+        sendReportBtn.style.display = 'none';
+      } else {
+        adminPanel.style.display = 'none';
+        sendReportBtn.style.display = 'flex';
+      }
+      
+      // Configurar botão de ponto
+      pontoBtn.onclick = baterPonto;
+      sendReportBtn.onclick = openReportModal;
+    }
+    
+    // Logout
+    function logout() {
+      localStorage.removeItem('pontoToken');
+      localStorage.removeItem('pontoUser');
+      token = null;
+      currentUser = null;
+      isAdmin = false;
+      
+      // Resetar UI
+      authButtons.style.display = 'flex';
+      logoutBtn.style.display = 'none';
+      mainContainer.style.display = 'none';
+      historyContainer.style.display = 'none';
+      adminPanel.style.display = 'none';
+      userInfoEl.textContent = 'Faça login para começar';
+      
+      // Limpar histórico
+      historyList.innerHTML = '<li class="empty-history">Nenhum registro hoje</li>';
+      statusEl.textContent = 'Status: Aguardando primeiro registro';
+    }
+    
+    logoutBtn.addEventListener('click', logout);
+    
+    // Bater ponto
+    async function baterPonto() {
+      if (!currentUser) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/registros`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Adicionar ao histórico local
+          registrosHoje.push({
+            tipo: data.tipo,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Atualizar UI
+          updateUI(data.tipo);
+        } else {
+          alert(data.message || 'Erro ao bater ponto');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor');
+      }
+    }
+    
+    // Carregar registros do dia
+    async function loadRegistrosHoje() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/registros/hoje`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          registrosHoje = data.registros;
+          
+          // Atualizar UI
+          updateHistoryUI();
+          
+          // Determinar última ação para o botão
+          if (registrosHoje.length > 0) {
+            lastAction = registrosHoje[registrosHoje.length - 1].tipo;
+            pontoBtn.innerHTML = `<i class="fas ${lastAction === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${lastAction === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
+            
+            // Atualizar status
+            const ultimoRegistro = registrosHoje[registrosHoje.length - 1];
+            statusEl.innerHTML = `Último registro: <strong>${formatTime(new Date(ultimoRegistro.timestamp))} (${ultimoRegistro.tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar registros:', error);
+      }
+    }
+    
+    // Formatadores de data/hora
+    function formatDate(date) {
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    function formatTime(date) {
+      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Atualizar a interface com novo registro
+    function updateUI(tipo) {
+      const agora = new Date();
+      
+      // Atualizar status
+      statusEl.innerHTML = `Último registro: <strong>${formatTime(agora)} (${tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
+      
+      // Efeito visual
+      statusEl.style.animation = 'none';
+      void statusEl.offsetWidth;
+      statusEl.style.animation = 'highlight 0.5s ease';
+      
+      // Atualizar botão
+      pontoBtn.innerHTML = `<i class="fas ${tipo === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${tipo === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
+      
+      // Adicionar ao histórico
+      const emptyItem = document.querySelector('.empty-history');
+      if (emptyItem) emptyItem.remove();
+      
+      const item = document.createElement('li');
+      item.className = tipo;
+      
+      item.innerHTML = `
+        <div class="registro-info">
+          <span class="registro-horario">${formatTime(agora)}</span>
+          <span class="registro-tipo">${tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+        </div>
+        <span class="registro-data">${formatDate(agora)}</span>
+      `;
+      
+      historyList.prepend(item);
+      
+      // Calcular horas trabalhadas
+      calcularHorasTrabalhadas();
+    }
+    
+    // Calcular horas trabalhadas no dia
+    function calcularHorasTrabalhadas() {
+      if (registrosHoje.length < 2) {
+        totalHoursEl.textContent = 'Horas trabalhadas: 00:00';
+        return;
+      }
+      
+      // Ordenar registros por timestamp
+      const registrosOrdenados = [...registrosHoje].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+      let totalMs = 0;
+      let entradaAtual = null;
+      
+      for (const registro of registrosOrdenados) {
+        if (registro.tipo === 'entrada') {
+          entradaAtual = new Date(registro.timestamp).getTime();
+        } else if (entradaAtual) {
+          totalMs += (new Date(registro.timestamp).getTime() - entradaAtual);
+          entradaAtual = null;
+        }
+      }
+      
+      // Converter milissegundos para horas e minutos
+      const totalHoras = Math.floor(totalMs / (1000 * 60 * 60));
+      const totalMinutos = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      totalHoursEl.textContent = `Horas trabalhadas: ${String(totalHoras).padStart(2, '0')}:${String(totalMinutos).padStart(2, '0')}`;
+    }
+    
+    // Atualizar histórico na UI
+    function updateHistoryUI() {
+      if (registrosHoje.length === 0) return;
+      
+      // Limpar lista
+      historyList.innerHTML = '';
+      
+      // Adicionar registros (do mais recente para o mais antigo)
+      for (let i = registrosHoje.length - 1; i >= 0; i--) {
+        const registro = registrosHoje[i];
+        const item = document.createElement('li');
+        item.className = registro.tipo;
+        
+        item.innerHTML = `
+          <div class="registro-info">
+            <span class="registro-horario">${formatTime(new Date(registro.timestamp))}</span>
+            <span class="registro-tipo">${registro.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+          </div>
+          <span class="registro-data">${formatDate(new Date(registro.timestamp))}</span>
+        `;
+        
+        historyList.appendChild(item);
+      }
+      
+      // Calcular horas trabalhadas
+      calcularHorasTrabalhadas();
+    }
+    
+    // Modal de envio de relatório
+    function openReportModal() {
+      // Definir datas padrão (hoje)
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('report-start').value = hoje;
+      document.getElementById('report-end').value = hoje;
+      
+      // Preencher email do gestor se existir no usuário
+      if (currentUser.emailGestor) {
+        document.getElementById('report-gestor').value = currentUser.emailGestor;
+      }
+      
+      reportModal.style.display = 'flex';
+    }
+    
+    function closeReportModal() {
+      reportModal.style.display = 'none';
+    }
+    
+    // Enviar relatório por email
+    async function sendReport() {
+      const emailGestor = document.getElementById('report-gestor').value;
+      const startDate = document.getElementById('report-start').value;
+      const endDate = document.getElementById('report-end').value;
+      
+      if (!emailGestor || !startDate || !endDate) {
+        alert('Preencha todos os campos');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/registros/enviar-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            startDate,
+            endDate,
+            emailGestor
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          alert('Espelho de ponto enviado com sucesso!');
+          closeReportModal();
+        } else {
+          alert(data.message || 'Erro ao enviar espelho de ponto');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor');
+      }
+    }
+    
+    // Verificar autenticação ao carregar a página
+    async function checkAuth() {
+      const savedToken = localStorage.getItem('pontoToken');
+      const savedUser = localStorage.getItem('pontoUser');
+      
+      if (savedToken && savedUser) {
+        try {
+          // Verificar token no servidor
+          const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+            headers: {
+              'Authorization': `Bearer ${savedToken}`
+            }
+          });
+          
+          if (response.ok) {
+            token = savedToken;
+            currentUser = JSON.parse(savedUser);
+            isAdmin = currentUser.isAdmin || false;
+            
+            updateUIAfterLogin();
+            await loadRegistrosHoje();
+          } else {
+            logout();
+          }
+        } catch (error) {
+          console.error('Erro ao verificar autenticação:', error);
+        }
+      }
+    }
+    
+    // Inicializar aplicação
+    document.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>
