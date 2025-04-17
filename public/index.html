@@ -589,6 +589,37 @@
             <button type="submit" class="modal-btn confirm">Entrar</button>
           </div>
         </form>
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="#" id="primeiro-acesso-gestor" style="color: var(--primary-color);">
+            Primeiro acesso? Cadastre-se como gestor
+          </a>
+        </div>
+      </div>
+    </div>
+      </div>
+    </div>
+
+    <div class="modal" id="gestor-cadastro-modal">
+      <div class="modal-content">
+        <h2>Cadastro de Gestor</h2>
+        <form id="gestor-cadastro-form">
+          <div class="form-group">
+            <label for="gestor-cadastro-nome">Nome Completo</label>
+            <input type="text" id="gestor-cadastro-nome" required>
+          </div>
+          <div class="form-group">
+            <label for="gestor-cadastro-email">E-mail Corporativo</label>
+            <input type="email" id="gestor-cadastro-email" required>
+          </div>
+          <div class="form-group">
+            <label for="gestor-cadastro-senha">Senha (mínimo 8 caracteres)</label>
+            <input type="password" id="gestor-cadastro-senha" required minlength="8">
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel" onclick="closeGestorCadastroModal()">Cancelar</button>
+            <button type="submit" class="modal-btn confirm">Cadastrar</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -671,4 +702,612 @@
       const statusEl = document.getElementById('status');
       const locationStatusEl = document.getElementById('location-status');
       const historyList = document.getElementById('history-list');
-      const userInfoEl = document
+      const userInfoEl = document.getElementById('user-info');
+      const totalHoursEl = document.getElementById('total-hours');
+      const mainContainer = document.getElementById('main-container');
+      const historyContainer = document.getElementById('history-container');
+      const gestorPanel = document.getElementById('gestor-panel');
+      const colaboradoresList = document.getElementById('colaboradores-list');
+      const logoutBtn = document.getElementById('logout-btn');
+      const sendReportBtn = document.getElementById('send-report-btn');
+      const addColaboradorModal = document.getElementById('add-colaborador-modal');
+      const colaboradorForm = document.getElementById('colaborador-form');
+      const reportModal = document.getElementById('report-modal');
+
+      // Event Listeners
+      loginForm.addEventListener('submit', handleColaboradorLogin);
+      gestorLoginLink.addEventListener('click', openGestorLoginModal);
+      gestorLoginForm.addEventListener('submit', handleGestorLogin);
+      colaboradorForm.addEventListener('submit', handleAddColaborador);
+      logoutBtn.addEventListener('click', logout);
+      sendReportBtn.addEventListener('click', openReportModal);
+
+      // Funções de Login
+      async function handleColaboradorLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            token = data.token;
+            currentUser = data.user;
+            isGestor = data.user.isGestor || false;
+            
+            localStorage.setItem('pontoToken', token);
+            localStorage.setItem('pontoUser', JSON.stringify(currentUser));
+            
+            updateUIAfterLogin();
+            await loadRegistrosHoje();
+          } else {
+            alert(data.message || 'Erro ao fazer login');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      }
+
+      // Event Listeners
+document.getElementById('primeiro-acesso-gestor').addEventListener('click', function(e) {
+  e.preventDefault();
+  closeGestorLoginModal();
+  openGestorCadastroModal();
+});
+
+document.getElementById('gestor-cadastro-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const gestor = {
+    nome: document.getElementById('gestor-cadastro-nome').value,
+    email: document.getElementById('gestor-cadastro-email').value,
+    password: document.getElementById('gestor-cadastro-senha').value
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/register-gestor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(gestor)
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert('Gestor cadastrado com sucesso! Faça login.');
+      closeGestorCadastroModal();
+      openGestorLoginModal();
+    } else {
+      alert(data.message || 'Erro no cadastro');
+    }
+  } catch (error) {
+    console.error('Erro:', error);
+    alert('Erro ao conectar com o servidor');
+  }
+});
+
+function openGestorCadastroModal() {
+  document.getElementById('gestor-cadastro-modal').style.display = 'flex';
+}
+
+function closeGestorCadastroModal() {
+  document.getElementById('gestor-cadastro-modal').style.display = 'none';
+  document.getElementById('gestor-cadastro-form').reset();
+}
+
+      async function handleGestorLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('gestor-email').value;
+        const password = document.getElementById('gestor-password').value;
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/login-gestor`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            token = data.token;
+            currentUser = data.user;
+            isGestor = true;
+            
+            localStorage.setItem('pontoToken', token);
+            localStorage.setItem('pontoUser', JSON.stringify(currentUser));
+            
+            updateUIAfterLogin();
+            closeGestorLoginModal();
+            loadColaboradores();
+          } else {
+            alert(data.message || 'Credenciais inválidas');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      }
+
+      // Funções de UI
+      function updateUIAfterLogin() {
+        authScreen.style.display = 'none';
+        logoutBtn.style.display = 'block';
+        userInfoEl.textContent = `${currentUser.nome} - ${currentUser.setor}`;
+
+        if (isGestor) {
+          mainContainer.style.display = 'none';
+          historyContainer.style.display = 'none';
+          gestorPanel.style.display = 'block';
+        } else {
+          mainContainer.style.display = 'block';
+          historyContainer.style.display = 'block';
+          gestorPanel.style.display = 'none';
+          verificarLocalizacao();
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem('pontoToken');
+        localStorage.removeItem('pontoUser');
+        token = null;
+        currentUser = null;
+        isGestor = false;
+
+        authScreen.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        mainContainer.style.display = 'none';
+        historyContainer.style.display = 'none';
+        gestorPanel.style.display = 'none';
+        userInfoEl.textContent = 'Faça login para registrar seu ponto';
+
+        historyList.innerHTML = '<li class="empty-history">Nenhum registro hoje</li>';
+        statusEl.textContent = 'Status: Aguardando primeiro registro';
+      }
+
+      // Funções do Gestor
+      function openGestorLoginModal() {
+        gestorLoginModal.style.display = 'flex';
+      }
+
+      function closeGestorLoginModal() {
+        gestorLoginModal.style.display = 'none';
+        gestorLoginForm.reset();
+      }
+
+      function openAddColaboradorModal() {
+        initMap();
+        addColaboradorModal.style.display = 'flex';
+      }
+
+      function closeAddColaboradorModal() {
+        addColaboradorModal.style.display = 'none';
+        colaboradorForm.reset();
+      }
+
+      async function loadColaboradores() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/colaboradores`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            if (data.colaboradores.length === 0) {
+              colaboradoresList.innerHTML = '<p>Nenhum colaborador cadastrado</p>';
+              return;
+            }
+
+            let html = '';
+            data.colaboradores.forEach(colaborador => {
+              html += `
+                <div class="colaborador-item">
+                  <div class="colaborador-info">
+                    <div class="colaborador-nome">${colaborador.nome}</div>
+                    <div class="colaborador-email">${colaborador.email} - ${colaborador.setor}</div>
+                  </div>
+                  <div class="colaborador-actions">
+                    <button class="gestor-btn" onclick="verRegistrosColaborador(${colaborador.id})">
+                      <i class="fas fa-history"></i> Registros
+                    </button>
+                  </div>
+                </div>
+              `;
+            });
+
+            colaboradoresList.innerHTML = html;
+          }
+        } catch (error) {
+          console.error('Erro ao carregar colaboradores:', error);
+          colaboradoresList.innerHTML = '<p>Erro ao carregar colaboradores</p>';
+        }
+      }
+
+      async function handleAddColaborador(e) {
+        e.preventDefault();
+        const nome = document.getElementById('colaborador-nome').value;
+        const email = document.getElementById('colaborador-email').value;
+        const setor = document.getElementById('colaborador-setor').value;
+        const latitude = document.getElementById('colaborador-latitude').value;
+        const longitude = document.getElementById('colaborador-longitude').value;
+        const raioPermitido = document.getElementById('colaborador-raio').value;
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/colaboradores`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              nome,
+              email,
+              setor,
+              latitude: parseFloat(latitude),
+              longitude: parseFloat(longitude),
+              raioPermitido: parseInt(raioPermitido) || 100
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('Colaborador cadastrado com sucesso!');
+            closeAddColaboradorModal();
+            loadColaboradores();
+          } else {
+            alert(data.message || 'Erro ao cadastrar colaborador');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      }
+
+      // Funções do Mapa
+      function initMap() {
+        const mapElement = document.getElementById('map');
+        mapElement.innerHTML = '';
+
+        const initialLocation = { lat: -23.5505, lng: -46.6333 }; // São Paulo
+
+        map = new google.maps.Map(mapElement, {
+          center: initialLocation,
+          zoom: 15
+        });
+
+        marker = new google.maps.Marker({
+          position: initialLocation,
+          map: map,
+          draggable: true
+        });
+
+        map.addListener('click', (e) => {
+          marker.setPosition(e.latLng);
+          updateLocationStatus(e.latLng.lat(), e.latLng.lng());
+        });
+
+        marker.addListener('dragend', (e) => {
+          updateLocationStatus(e.latLng.lat(), e.latLng.lng());
+        });
+      }
+
+      function updateLocationStatus(lat, lng) {
+        document.getElementById('colaborador-latitude').value = lat;
+        document.getElementById('colaborador-longitude').value = lng;
+        document.getElementById('map-status').textContent = `Localização definida: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        document.getElementById('map-status').className = 'location-status valid';
+      }
+
+      // Funções do Colaborador
+      async function verificarLocalizacao() {
+        if (!currentUser.latitude || !currentUser.longitude) {
+          locationStatusEl.textContent = 'Localização não configurada - contate seu gestor';
+          locationStatusEl.className = 'location-status invalid';
+          pontoBtn.disabled = true;
+          return;
+        }
+
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          });
+
+          const distance = await calcularDistancia(
+            position.coords.latitude,
+            position.coords.longitude,
+            currentUser.latitude,
+            currentUser.longitude
+          );
+
+          if (distance <= (currentUser.raioPermitido || 100)) {
+            locationStatusEl.textContent = `Você está no local permitido (${Math.round(distance)}m do ponto central)`;
+            locationStatusEl.className = 'location-status valid';
+            pontoBtn.disabled = false;
+          } else {
+            locationStatusEl.textContent = `Você está a ${Math.round(distance)}m do local permitido (máximo ${currentUser.raioPermitido || 100}m)`;
+            locationStatusEl.className = 'location-status invalid';
+            pontoBtn.disabled = true;
+          }
+        } catch (error) {
+          console.error('Erro ao obter localização:', error);
+          locationStatusEl.textContent = 'Erro ao verificar localização - ative a geolocalização';
+          locationStatusEl.className = 'location-status invalid';
+          pontoBtn.disabled = true;
+        }
+      }
+
+      function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c;
+      }
+
+      async function baterPonto() {
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          });
+
+          const response = await fetch(`${API_BASE_URL}/registros`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            registrosHoje.push({
+              tipo: data.tipo,
+              timestamp: new Date().toISOString(),
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+            
+            updateUI(data.tipo);
+          } else {
+            alert(data.message || 'Erro ao bater ponto');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao obter localização ou conectar com o servidor');
+        }
+      }
+
+      async function loadRegistrosHoje() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/registros/hoje`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            registrosHoje = data.registros;
+            updateHistoryUI();
+
+            if (registrosHoje.length > 0) {
+              lastAction = registrosHoje[registrosHoje.length - 1].tipo;
+              pontoBtn.innerHTML = `<i class="fas ${lastAction === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${lastAction === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
+              
+              const ultimoRegistro = registrosHoje[registrosHoje.length - 1];
+              statusEl.innerHTML = `Último registro: <strong>${formatTime(new Date(ultimoRegistro.timestamp))} (${ultimoRegistro.tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao carregar registros:', error);
+        }
+      }
+
+      function updateUI(tipo) {
+        const agora = new Date();
+        statusEl.innerHTML = `Último registro: <strong>${formatTime(agora)} (${tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
+        
+        statusEl.style.animation = 'none';
+        void statusEl.offsetWidth;
+        statusEl.style.animation = 'highlight 0.5s ease';
+        
+        pontoBtn.innerHTML = `<i class="fas ${tipo === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${tipo === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
+        
+        const emptyItem = document.querySelector('.empty-history');
+        if (emptyItem) emptyItem.remove();
+        
+        const item = document.createElement('li');
+        item.className = tipo;
+        
+        item.innerHTML = `
+          <div class="registro-info">
+            <span class="registro-horario">${formatTime(agora)}</span>
+            <span class="registro-tipo">${tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+          </div>
+          <span class="registro-data">${formatDate(agora)}</span>
+        `;
+        
+        historyList.prepend(item);
+        calcularHorasTrabalhadas();
+      }
+
+      function updateHistoryUI() {
+        if (registrosHoje.length === 0) return;
+        
+        historyList.innerHTML = '';
+        
+        for (let i = registrosHoje.length - 1; i >= 0; i--) {
+          const registro = registrosHoje[i];
+          const item = document.createElement('li');
+          item.className = registro.tipo;
+          
+          item.innerHTML = `
+            <div class="registro-info">
+              <span class="registro-horario">${formatTime(new Date(registro.timestamp))}</span>
+              <span class="registro-tipo">${registro.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+            </div>
+            <span class="registro-data">${formatDate(new Date(registro.timestamp))}</span>
+          `;
+          
+          historyList.appendChild(item);
+        }
+        
+        calcularHorasTrabalhadas();
+      }
+
+      function calcularHorasTrabalhadas() {
+        if (registrosHoje.length < 2) {
+          totalHoursEl.textContent = 'Horas trabalhadas: 00:00';
+          return;
+        }
+        
+        const registrosOrdenados = [...registrosHoje].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        let totalMs = 0;
+        let entradaAtual = null;
+        
+        for (const registro of registrosOrdenados) {
+          if (registro.tipo === 'entrada') {
+            entradaAtual = new Date(registro.timestamp).getTime();
+          } else if (entradaAtual) {
+            totalMs += (new Date(registro.timestamp).getTime() - entradaAtual);
+            entradaAtual = null;
+          }
+        }
+        
+        const totalHoras = Math.floor(totalMs / (1000 * 60 * 60));
+        const totalMinutos = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
+        
+        totalHoursEl.textContent = `Horas trabalhadas: ${String(totalHoras).padStart(2, '0')}:${String(totalMinutos).padStart(2, '0')}`;
+      }
+
+      function formatDate(date) {
+        return date.toLocaleDateString('pt-BR');
+      }
+
+      function formatTime(date) {
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      // Funções de Relatório
+      function openReportModal() {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('report-start').value = hoje;
+        document.getElementById('report-end').value = hoje;
+        reportModal.style.display = 'flex';
+      }
+
+      function closeReportModal() {
+        reportModal.style.display = 'none';
+      }
+
+      async function sendReport() {
+        const startDate = document.getElementById('report-start').value;
+        const endDate = document.getElementById('report-end').value;
+        
+        try {
+          const response = await fetch(`${API_BASE_URL}/registros/enviar-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              userId: currentUser.id,
+              startDate,
+              endDate
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('Espelho de ponto enviado com sucesso!');
+            closeReportModal();
+          } else {
+            alert(data.message || 'Erro ao enviar espelho de ponto');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      }
+
+      // Função para visualizar registros de colaborador
+      function verRegistrosColaborador(id) {
+        // Implementar a visualização dos registros do colaborador
+        alert(`Visualizar registros do colaborador ${id}`);
+      }
+
+      // Inicialização
+      async function checkAuth() {
+        const savedToken = localStorage.getItem('pontoToken');
+        const savedUser = localStorage.getItem('pontoUser');
+        
+        if (savedToken && savedUser) {
+          try {
+            const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+              headers: {
+                'Authorization': `Bearer ${savedToken}`
+              }
+            });
+            
+            if (response.ok) {
+              token = savedToken;
+              currentUser = JSON.parse(savedUser);
+              isGestor = currentUser.isGestor || false;
+              
+              updateUIAfterLogin();
+              
+              if (isGestor) {
+                loadColaboradores();
+              } else {
+                await loadRegistrosHoje();
+                verificarLocalizacao();
+              }
+            } else {
+              logout();
+            }
+          } catch (error) {
+            console.error('Erro ao verificar autenticação:', error);
+          }
+        }
+      }
+
+      // Atribuir eventos
+      pontoBtn.addEventListener('click', baterPonto);
+
+      // Iniciar aplicação
+      document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+  </body>
+</html>

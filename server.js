@@ -14,10 +14,16 @@ const SECRET_KEY = process.env.SECRET_KEY || 'sua-chave-secreta-super-segura';
 
 // Configuração do email
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true para 465, false para outras portas
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
@@ -33,20 +39,60 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
 
 function initializeDatabase() {
   db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      setor TEXT NOT NULL,
-      emailGestor TEXT NOT NULL,
-      isGestor BOOLEAN DEFAULT 0,
-      latitude REAL,
-      longitude REAL,
-      raioPermitido INTEGER DEFAULT 100,
-      dataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
+    // Primeiro verifica se a tabela existe
+    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'", (err, row) => {
+      if (err) {
+        console.error('Erro ao verificar tabela usuarios:', err);
+        return;
+      }
+
+      if (row) {
+        // Se a tabela existe, verifica se a coluna isGestor existe
+        db.all("PRAGMA table_info(usuarios)", (err, columns) => {
+          if (err) {
+            console.error('Erro ao verificar colunas:', err);
+            return;
+          }
+
+          // Verifica se a coluna isGestor existe
+          const hasIsGestor = columns.some(col => col.name === 'isGestor');
+          
+          if (!hasIsGestor) {
+            // Adiciona a coluna se não existir
+            db.run("ALTER TABLE usuarios ADD COLUMN isGestor BOOLEAN DEFAULT 0", (err) => {
+              if (err) {
+                console.error('Erro ao adicionar coluna isGestor:', err);
+              } else {
+                console.log('Coluna isGestor adicionada com sucesso');
+              }
+            });
+          }
+        });
+      } else {
+        // Cria a tabela se não existir
+        db.run(`CREATE TABLE usuarios (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nome TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          setor TEXT NOT NULL,
+          emailGestor TEXT NOT NULL,
+          isGestor BOOLEAN DEFAULT 0,
+          latitude REAL,
+          longitude REAL,
+          raioPermitido INTEGER DEFAULT 100,
+          dataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => {
+          if (err) {
+            console.error('Erro ao criar tabela usuarios:', err);
+          } else {
+            console.log('Tabela usuarios criada com sucesso');
+          }
+        });
+      }
+    });
+
+    // Cria a tabela de registros se não existir
     db.run(`CREATE TABLE IF NOT EXISTS registros (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       usuarioId INTEGER NOT NULL,
@@ -158,9 +204,35 @@ app.post('/api/auth/login-gestor', async (req, res) => {
 });
 
 app.post('/api/auth/register-gestor', async (req, res) => {
+  // Verificar se já existe algum gestor cadastrado
+  const gestorExistente = await new Promise((resolve) => {
+    db.get("SELECT id FROM usuarios WHERE isGestor = 1 LIMIT 1", (err, row) => resolve(row));
+  });
+
+  if (gestorExistente) {
+    return res.status(403).json({ 
+      message: 'Cadastro de gestor bloqueado. Acesse com um gestor existente.' 
+    });
+  }
+
+  // Processar cadastro do primeiro gestor
   const { nome, email, password } = req.body;
   
+  // Validações básicas
+  if (!nome || !email || !password) {
+    return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'A senha deve ter no mínimo 8 caracteres' });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'E-mail inválido' });
+  }
+
   try {
+    // Verificar se o e-mail já está cadastrado (mesmo que não seja gestor)
     const userExists = await new Promise((resolve, reject) => {
       db.get("SELECT id FROM usuarios WHERE email = ?", [email], (err, row) => {
         if (err) reject(err);
@@ -172,8 +244,10 @@ app.post('/api/auth/register-gestor', async (req, res) => {
       return res.status(400).json({ message: 'E-mail já cadastrado' });
     }
     
+    // Criptografar a senha
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // Cadastrar o primeiro gestor
     await new Promise((resolve, reject) => {
       db.run(
         "INSERT INTO usuarios (nome, email, password, setor, emailGestor, isGestor) VALUES (?, ?, ?, ?, ?, ?)",
@@ -185,10 +259,34 @@ app.post('/api/auth/register-gestor', async (req, res) => {
       );
     });
     
-    res.status(201).json({ message: 'Gestor cadastrado com sucesso' });
+    // Enviar e-mail de confirmação
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: 'Cadastro de Gestor realizado com sucesso',
+      html: `
+        <h1>Bem-vindo ao Sistema de Ponto</h1>
+        <p>Seu cadastro como gestor foi realizado com sucesso.</p>
+        <p><strong>Credenciais de acesso:</strong></p>
+        <ul>
+          <li><strong>Email:</strong> ${email}</li>
+        </ul>
+        <p>Acesse o sistema em: ${process.env.APP_URL || 'http://localhost:3000'}</p>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    
+    res.status(201).json({ 
+      success: true,
+      message: 'Gestor cadastrado com sucesso. Você já pode fazer login.' 
+    });
   } catch (error) {
     console.error('Erro no registro do gestor:', error);
-    res.status(500).json({ message: 'Erro ao cadastrar gestor' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Erro ao cadastrar gestor' 
+    });
   }
 });
 
