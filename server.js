@@ -5,12 +5,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
-const xlsx = require('xlsx');
-const path = require('path');
-const fs = require('fs');
 const nodemailer = require('nodemailer');
-
-
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,7 +40,10 @@ function initializeDatabase() {
       password TEXT NOT NULL,
       setor TEXT NOT NULL,
       emailGestor TEXT NOT NULL,
-      isAdmin BOOLEAN DEFAULT 0,
+      isGestor BOOLEAN DEFAULT 0,
+      latitude REAL,
+      longitude REAL,
+      raioPermitido INTEGER DEFAULT 100,
       dataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
     
@@ -53,19 +52,10 @@ function initializeDatabase() {
       usuarioId INTEGER NOT NULL,
       tipo TEXT NOT NULL,
       timestamp DATETIME NOT NULL,
+      latitude REAL,
+      longitude REAL,
       FOREIGN KEY(usuarioId) REFERENCES usuarios(id)
     )`);
-    
-    // Criar admin padrão
-    db.get("SELECT id FROM usuarios WHERE email = 'admin@ponto.com'", [], (err, row) => {
-      if (!row) {
-        const hashedPassword = bcrypt.hashSync('admin123', 10);
-        db.run(
-          "INSERT INTO usuarios (nome, email, password, setor, emailGestor, isAdmin) VALUES (?, ?, ?, ?, ?, ?)",
-          ['Administrador', 'admin@ponto.com', hashedPassword, 'Administração', 'admin@ponto.com', 1]
-        );
-      }
-    });
   });
 }
 
@@ -89,64 +79,6 @@ function authenticateToken(req, res, next) {
 }
 
 // Rotas de autenticação
-app.post('/api/auth/register', async (req, res) => {
-  const { nome, email, password, setor, emailGestor } = req.body;
-  
-  if (!nome || !email || !password || !setor || !emailGestor) {
-    return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
-  }
-  
-  try {
-    const userExists = await new Promise((resolve, reject) => {
-      db.get("SELECT id FROM usuarios WHERE email = ?", [email], (err, row) => {
-        if (err) reject(err);
-        resolve(row);
-      });
-    });
-    
-    if (userExists) {
-      return res.status(400).json({ message: 'E-mail já cadastrado' });
-    }
-    
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const userId = await new Promise((resolve, reject) => {
-      db.run(
-        "INSERT INTO usuarios (nome, email, password, setor, emailGestor) VALUES (?, ?, ?, ?, ?)",
-        [nome, email, hashedPassword, setor, emailGestor],
-        function(err) {
-          if (err) reject(err);
-          resolve(this.lastID);
-        }
-      );
-    });
-    
-    // Enviar email de notificação
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to: emailGestor,
-      subject: 'Novo cadastro no sistema de ponto',
-      html: `
-        <h1>Novo funcionário cadastrado</h1>
-        <p>Dados do novo funcionário:</p>
-        <ul>
-          <li><strong>Nome:</strong> ${nome}</li>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Setor:</strong> ${setor}</li>
-          <li><strong>Data de cadastro:</strong> ${new Date().toLocaleString()}</li>
-        </ul>
-      `
-    };
-    
-    await transporter.sendMail(mailOptions);
-    
-    res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
-  } catch (error) {
-    console.error('Erro no registro:', error);
-    res.status(500).json({ message: 'Erro ao cadastrar usuário' });
-  }
-});
-
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   
@@ -164,7 +96,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!passwordMatch) return res.status(401).json({ message: 'Credenciais inválidas' });
     
     const token = jwt.sign(
-      { id: user.id, email: user.email, isAdmin: user.isAdmin },
+      { id: user.id, email: user.email, isGestor: user.isGestor },
       SECRET_KEY,
       { expiresIn: '24h' }
     );
@@ -176,7 +108,10 @@ app.post('/api/auth/login', async (req, res) => {
         nome: user.nome,
         email: user.email,
         setor: user.setor,
-        isAdmin: user.isAdmin
+        isGestor: user.isGestor,
+        latitude: user.latitude,
+        longitude: user.longitude,
+        raioPermitido: user.raioPermitido
       }
     });
   } catch (error) {
@@ -185,9 +120,170 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.post('/api/auth/login-gestor', async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const user = await new Promise((resolve, reject) => {
+      db.get("SELECT * FROM usuarios WHERE email = ? AND isGestor = 1", [email], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    
+    if (!user) return res.status(401).json({ message: 'Gestor não encontrado' });
+    
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) return res.status(401).json({ message: 'Credenciais inválidas' });
+    
+    const token = jwt.sign(
+      { id: user.id, email: user.email, isGestor: true },
+      SECRET_KEY,
+      { expiresIn: '24h' }
+    );
+    
+    res.json({ 
+      token,
+      user: {
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        isGestor: true
+      }
+    });
+  } catch (error) {
+    console.error('Erro no login do gestor:', error);
+    res.status(500).json({ message: 'Erro ao fazer login' });
+  }
+});
+
+app.post('/api/auth/register-gestor', async (req, res) => {
+  const { nome, email, password } = req.body;
+  
+  try {
+    const userExists = await new Promise((resolve, reject) => {
+      db.get("SELECT id FROM usuarios WHERE email = ?", [email], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    
+    if (userExists) {
+      return res.status(400).json({ message: 'E-mail já cadastrado' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    await new Promise((resolve, reject) => {
+      db.run(
+        "INSERT INTO usuarios (nome, email, password, setor, emailGestor, isGestor) VALUES (?, ?, ?, ?, ?, ?)",
+        [nome, email, hashedPassword, 'Gestão', email, 1],
+        function(err) {
+          if (err) reject(err);
+          resolve();
+        }
+      );
+    });
+    
+    res.status(201).json({ message: 'Gestor cadastrado com sucesso' });
+  } catch (error) {
+    console.error('Erro no registro do gestor:', error);
+    res.status(500).json({ message: 'Erro ao cadastrar gestor' });
+  }
+});
+
+app.post('/api/colaboradores', authenticateToken, async (req, res) => {
+  if (!req.user.isGestor) {
+    return res.status(403).json({ message: 'Apenas gestores podem cadastrar colaboradores' });
+  }
+
+  const { nome, email, setor, latitude, longitude, raioPermitido } = req.body;
+  const password = Math.random().toString(36).slice(-8);
+
+  try {
+    const userExists = await new Promise((resolve, reject) => {
+      db.get("SELECT id FROM usuarios WHERE email = ?", [email], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    
+    if (userExists) {
+      return res.status(400).json({ message: 'E-mail já cadastrado' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    await new Promise((resolve, reject) => {
+      db.run(
+        "INSERT INTO usuarios (nome, email, password, setor, emailGestor, latitude, longitude, raioPermitido) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [nome, email, hashedPassword, setor, req.user.email, latitude, longitude, raioPermitido || 100],
+        function(err) {
+          if (err) reject(err);
+          resolve();
+        }
+      );
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: 'Seu cadastro no Sistema de Ponto',
+      html: `
+        <h1>Bem-vindo ao Sistema de Ponto</h1>
+        <p>Você foi cadastrado como colaborador.</p>
+        <p><strong>Credenciais de acesso:</strong></p>
+        <ul>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Senha temporária:</strong> ${password}</li>
+        </ul>
+        <p>Acesse o sistema em: ${process.env.APP_URL || 'http://localhost:3000'}</p>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    
+    res.status(201).json({ message: 'Colaborador cadastrado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao cadastrar colaborador:', error);
+    res.status(500).json({ message: 'Erro ao cadastrar colaborador' });
+  }
+});
+
 // Rotas de registros
 app.post('/api/registros', authenticateToken, async (req, res) => {
   try {
+    const { latitude, longitude } = req.body;
+    
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: 'Localização é obrigatória' });
+    }
+
+    const usuario = await new Promise((resolve, reject) => {
+      db.get("SELECT latitude, longitude, raioPermitido FROM usuarios WHERE id = ?", 
+        [req.user.id], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+      });
+    });
+
+    if (!usuario.latitude || !usuario.longitude) {
+      return res.status(400).json({ message: 'Localização não configurada' });
+    }
+
+    const distance = await calcularDistancia(
+      latitude,
+      longitude, 
+      usuario.latitude, 
+      usuario.longitude
+    );
+
+    if (distance > (usuario.raioPermitido || 100)) {
+      return res.status(400).json({ 
+        message: `Fora do local permitido (${Math.round(distance)}m do ponto)` 
+      });
+    }
+
     const lastRecord = await new Promise((resolve, reject) => {
       db.get(
         "SELECT tipo FROM registros WHERE usuarioId = ? ORDER BY timestamp DESC LIMIT 1",
@@ -204,11 +300,11 @@ app.post('/api/registros', authenticateToken, async (req, res) => {
     
     await new Promise((resolve, reject) => {
       db.run(
-        "INSERT INTO registros (usuarioId, tipo, timestamp) VALUES (?, ?, ?)",
-        [req.user.id, tipo, timestamp],
+        "INSERT INTO registros (usuarioId, tipo, timestamp, latitude, longitude) VALUES (?, ?, ?, ?, ?)",
+        [req.user.id, tipo, timestamp, latitude, longitude],
         function(err) {
           if (err) reject(err);
-          resolve(this.lastID);
+          resolve();
         }
       );
     });
@@ -223,39 +319,58 @@ app.post('/api/registros', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/registros/hoje', authenticateToken, async (req, res) => {
+async function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const φ1 = lat1 * Math.PI/180;
+  const φ2 = lat2 * Math.PI/180;
+  const Δφ = (lat2-lat1) * Math.PI/180;
+  const Δλ = (lon2-lon1) * Math.PI/180;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c;
+}
+
+// Rotas do gestor
+app.get('/api/colaboradores', authenticateToken, async (req, res) => {
+  if (!req.user.isGestor) {
+    return res.status(403).json({ message: 'Apenas gestores podem acessar esta lista' });
+  }
+
   try {
-    const hoje = new Date().toISOString().split('T')[0];
-    
-    const registros = await new Promise((resolve, reject) => {
+    const colaboradores = await new Promise((resolve, reject) => {
       db.all(
-        `SELECT id, tipo, timestamp 
-         FROM registros 
-         WHERE usuarioId = ? AND date(timestamp) = date(?)
-         ORDER BY timestamp ASC`,
-        [req.user.id, hoje],
+        "SELECT id, nome, email, setor FROM usuarios WHERE emailGestor = ? AND isGestor = 0",
+        [req.user.email],
         (err, rows) => {
           if (err) reject(err);
           resolve(rows);
         }
       );
     });
-    
-    res.json({ registros });
+
+    res.json({ colaboradores });
   } catch (error) {
-    console.error('Erro ao buscar registros:', error);
-    res.status(500).json({ message: 'Erro ao buscar registros' });
+    console.error('Erro ao buscar colaboradores:', error);
+    res.status(500).json({ message: 'Erro ao buscar colaboradores' });
   }
 });
 
-app.get('/api/registros/usuario/:id', authenticateToken, async (req, res) => {
+app.get('/api/registros/colaborador/:id', authenticateToken, async (req, res) => {
+  if (!req.user.isGestor) {
+    return res.status(403).json({ message: 'Apenas gestores podem acessar estes registros' });
+  }
+
   try {
     const { id } = req.params;
     const { startDate, endDate } = req.query;
 
     const registros = await new Promise((resolve, reject) => {
       db.all(
-        `SELECT id, tipo, timestamp 
+        `SELECT id, tipo, timestamp, latitude, longitude 
          FROM registros 
          WHERE usuarioId = ? 
          AND date(timestamp) BETWEEN date(?) AND date(?)
@@ -275,106 +390,10 @@ app.get('/api/registros/usuario/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/registros/enviar-email', authenticateToken, async (req, res) => {
-  try {
-    const { userId, startDate, endDate, emailGestor } = req.body;
-
-    // Buscar registros
-    const registros = await new Promise((resolve, reject) => {
-      db.all(
-        `SELECT tipo, timestamp 
-         FROM registros 
-         WHERE usuarioId = ? 
-         AND date(timestamp) BETWEEN date(?) AND date(?)
-         ORDER BY timestamp ASC`,
-        [userId, startDate, endDate],
-        (err, rows) => {
-          if (err) reject(err);
-          resolve(rows);
-        }
-      );
-    });
-
-    // Buscar dados do usuário
-    const usuario = await new Promise((resolve, reject) => {
-      db.get(
-        "SELECT nome, email, setor FROM usuarios WHERE id = ?",
-        [userId],
-        (err, row) => {
-          if (err) reject(err);
-          resolve(row);
-        }
-      );
-    });
-
-    // Calcular horas trabalhadas
-    let totalMs = 0;
-    let entradaAtual = null;
-    
-    for (const registro of registros) {
-      if (registro.tipo === 'entrada') {
-        entradaAtual = new Date(registro.timestamp).getTime();
-      } else if (entradaAtual) {
-        totalMs += (new Date(registro.timestamp).getTime() - entradaAtual);
-        entradaAtual = null;
-      }
-    }
-    
-    const totalHoras = Math.floor(totalMs / (1000 * 60 * 60));
-    const totalMinutos = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    // Formatar registros para email
-    const registrosFormatados = registros.map(reg => ({
-      Tipo: reg.tipo === 'entrada' ? 'Entrada' : 'Saída',
-      Data: new Date(reg.timestamp).toLocaleDateString('pt-BR'),
-      Hora: new Date(reg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    }));
-
-    // Enviar email
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to: emailGestor,
-      subject: `Espelho de Ponto - ${usuario.nome}`,
-      html: `
-        <h1>Espelho de Ponto</h1>
-        <h2>${usuario.nome}</h2>
-        <p><strong>Setor:</strong> ${usuario.setor}</p>
-        <p><strong>Período:</strong> ${new Date(startDate).toLocaleDateString('pt-BR')} à ${new Date(endDate).toLocaleDateString('pt-BR')}</p>
-        <p><strong>Total de horas:</strong> ${String(totalHoras).padStart(2, '0')}:${String(totalMinutos).padStart(2, '0')}</p>
-        
-        <h3>Registros:</h3>
-        <table border="1" cellpadding="5" cellspacing="0">
-          <tr>
-            <th>Tipo</th>
-            <th>Data</th>
-            <th>Hora</th>
-          </tr>
-          ${registrosFormatados.map(reg => `
-            <tr>
-              <td>${reg.Tipo}</td>
-              <td>${reg.Data}</td>
-              <td>${reg.Hora}</td>
-            </tr>
-          `).join('')}
-        </table>
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
-    
-    res.json({ message: 'Espelho de ponto enviado com sucesso' });
-  } catch (error) {
-    console.error('Erro ao enviar espelho de ponto:', error);
-    res.status(500).json({ message: 'Erro ao enviar espelho de ponto' });
-  }
-});
-
-// Rota para servir o frontend
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });

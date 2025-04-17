@@ -305,72 +305,6 @@
       opacity: 0.9;
     }
     
-    .auth-buttons {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      gap: 10px;
-    }
-    
-    .auth-btn {
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition);
-      border: none;
-    }
-    
-    .auth-btn.login {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-    }
-    
-    .auth-btn.register {
-      background: white;
-      color: var(--primary-color);
-    }
-    
-    .auth-btn:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-    }
-    
-    .admin-panel {
-      margin-top: 30px;
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: var(--shadow);
-    }
-    
-    .admin-panel h3 {
-      color: var(--primary-dark);
-      margin-top: 0;
-    }
-    
-    .admin-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-    
-    .admin-btn {
-      padding: 10px 15px;
-      background: var(--primary-light);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .admin-btn:hover {
-      background: var(--primary-dark);
-    }
-    
     .logout-btn {
       position: absolute;
       top: 20px;
@@ -406,6 +340,120 @@
       background: #3aa8d8;
     }
     
+    .gestor-panel {
+      margin-top: 30px;
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+    }
+    
+    .gestor-panel h3 {
+      color: var(--primary-dark);
+      margin-top: 0;
+    }
+    
+    .gestor-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .gestor-btn {
+      padding: 10px 15px;
+      background: var(--primary-light);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .gestor-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .colaboradores-list {
+      margin-top: 20px;
+    }
+    
+    .colaborador-item {
+      padding: 15px;
+      margin-bottom: 10px;
+      background: var(--secondary-color);
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .colaborador-info {
+      flex: 1;
+    }
+    
+    .colaborador-nome {
+      font-weight: 500;
+    }
+    
+    .colaborador-email {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    
+    .colaborador-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .location-status {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+    
+    .location-status.valid {
+      color: var(--success-color);
+    }
+    
+    .location-status.invalid {
+      color: var(--warning-color);
+    }
+    
+    .login-container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+    
+    .login-title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--primary-dark);
+    }
+    
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .login-link a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+    
     @media (max-width: 768px) {
       .app-container {
         padding: 15px;
@@ -420,7 +468,7 @@
         font-size: 1.8rem;
       }
       
-      .container, .history {
+      .container, .history, .login-container {
         padding: 20px;
       }
       
@@ -454,19 +502,40 @@
       <button class="logout-btn" id="logout-btn" style="display: none;">
         <i class="fas fa-sign-out-alt"></i> Sair
       </button>
-      <div class="auth-buttons" id="auth-buttons">
-        <button class="auth-btn login" onclick="openAuthModal('login')">Login</button>
-        <button class="auth-btn register" onclick="openAuthModal('register')">Cadastre-se</button>
-      </div>
       <h1>Ponto Digital PRO</h1>
-      <div class="user-info" id="user-info">Faça login para começar</div>
+      <div class="user-info" id="user-info">Faça login para registrar seu ponto</div>
     </header>
 
+    <!-- Tela de Login para Colaboradores -->
+    <div id="auth-screen">
+      <div class="login-container">
+        <h2 class="login-title">Login do Colaborador</h2>
+        <form id="login-form" class="login-form">
+          <div class="form-group">
+            <label for="login-email">E-mail</label>
+            <input type="email" id="login-email" required placeholder="Digite seu e-mail cadastrado">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Senha</label>
+            <input type="password" id="login-password" required placeholder="Digite sua senha">
+          </div>
+          <button type="submit" class="ponto-btn">
+            <i class="fas fa-sign-in-alt"></i> Entrar
+          </button>
+        </form>
+        <div class="login-link">
+          É gestor? <a href="#" id="gestor-login-link">Acesse o painel administrativo</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tela Principal para Colaboradores -->
     <div class="container" id="main-container" style="display: none;">
       <button class="ponto-btn" id="ponto-btn">
         <i class="fas fa-fingerprint"></i> Bater Ponto
       </button>
       <div class="status" id="status">Status: Aguardando primeiro registro</div>
+      <div class="location-status" id="location-status"></div>
       
       <button class="send-report-btn" id="send-report-btn">
         <i class="fas fa-paper-plane"></i> Enviar Espelho de Ponto
@@ -483,544 +552,123 @@
       </ul>
     </div>
 
-    <div class="admin-panel" id="admin-panel" style="display: none;">
-      <h3>Painel Administrativo</h3>
-      <p>Bem-vindo, administrador. Aqui você pode gerenciar os registros.</p>
-      <div class="admin-actions">
-        <button class="admin-btn" onclick="exportRegistros()">
-          <i class="fas fa-file-export"></i> Exportar Registros
+    <!-- Painel do Gestor -->
+    <div class="gestor-panel" id="gestor-panel" style="display: none;">
+      <h3>Painel do Gestor</h3>
+      <p>Bem-vindo, gestor. Aqui você pode gerenciar seus colaboradores.</p>
+      
+      <div class="gestor-actions">
+        <button class="gestor-btn" onclick="openAddColaboradorModal()">
+          <i class="fas fa-user-plus"></i> Adicionar Colaborador
         </button>
-        <button class="admin-btn" onclick="openRelatoriosModal()">
-          <i class="fas fa-chart-bar"></i> Gerar Relatórios
+        <button class="gestor-btn" onclick="loadColaboradores()">
+          <i class="fas fa-sync-alt"></i> Atualizar Lista
         </button>
       </div>
+      
+      <div class="colaboradores-list" id="colaboradores-list">
+        <p>Carregando colaboradores...</p>
+      </div>
     </div>
-  </div>
 
-  <!-- Modal de autenticação -->
-  <div class="modal" id="auth-modal">
-    <div class="modal-content">
-      <h2 id="auth-modal-title">Login</h2>
-      <form id="auth-form">
-        <div id="register-fields" style="display: none;">
+    <!-- Modal de login do gestor -->
+    <div class="modal" id="gestor-login-modal">
+      <div class="modal-content">
+        <h2>Login do Gestor</h2>
+        <form id="gestor-login-form">
           <div class="form-group">
-            <label for="register-nome">Nome Completo</label>
-            <input type="text" id="register-nome" placeholder="Digite seu nome completo">
+            <label for="gestor-email">E-mail</label>
+            <input type="email" id="gestor-email" required placeholder="Digite seu e-mail de gestor">
           </div>
           <div class="form-group">
-            <label for="register-setor">Setor</label>
-            <input type="text" id="register-setor" placeholder="Digite seu setor">
+            <label for="gestor-password">Senha</label>
+            <input type="password" id="gestor-password" required placeholder="Digite sua senha">
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel" onclick="closeGestorLoginModal()">Cancelar</button>
+            <button type="submit" class="modal-btn confirm">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de adicionar colaborador -->
+    <div class="modal" id="add-colaborador-modal">
+      <div class="modal-content">
+        <h2>Adicionar Colaborador</h2>
+        <form id="colaborador-form">
+          <div class="form-group">
+            <label for="colaborador-nome">Nome Completo</label>
+            <input type="text" id="colaborador-nome" placeholder="Digite o nome do colaborador">
           </div>
           <div class="form-group">
-            <label for="register-gestor">Email do Gestor</label>
-            <input type="email" id="register-gestor" placeholder="Digite o email do seu gestor">
+            <label for="colaborador-email">E-mail</label>
+            <input type="email" id="colaborador-email" placeholder="Digite o e-mail do colaborador">
           </div>
+          <div class="form-group">
+            <label for="colaborador-setor">Setor</label>
+            <input type="text" id="colaborador-setor" placeholder="Digite o setor do colaborador">
+          </div>
+          <div class="form-group">
+            <label>Localização para bater ponto</label>
+            <div id="map" style="height: 250px;"></div>
+            <div class="location-status" id="map-status">Clique no mapa para definir a localização</div>
+            <input type="hidden" id="colaborador-latitude">
+            <input type="hidden" id="colaborador-longitude">
+          </div>
+          <div class="form-group">
+            <label for="colaborador-raio">Raio permitido (metros)</label>
+            <input type="number" id="colaborador-raio" placeholder="Digite o raio em metros" value="100">
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel" onclick="closeAddColaboradorModal()">Cancelar</button>
+            <button type="submit" class="modal-btn confirm">Cadastrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de envio de espelho -->
+    <div class="modal" id="report-modal">
+      <div class="modal-content">
+        <h2>Enviar Espelho de Ponto</h2>
+        <div class="form-group">
+          <label for="report-start">Data Início</label>
+          <input type="date" id="report-start" class="form-group input">
         </div>
         <div class="form-group">
-          <label for="auth-email">E-mail</label>
-          <input type="email" id="auth-email" required placeholder="Digite seu e-mail">
-        </div>
-        <div class="form-group">
-          <label for="auth-password">Senha</label>
-          <input type="password" id="auth-password" required placeholder="Digite sua senha">
+          <label for="report-end">Data Fim</label>
+          <input type="date" id="report-end" class="form-group input">
         </div>
         <div class="modal-buttons">
-          <button type="button" class="modal-btn cancel" onclick="closeAuthModal()">Cancelar</button>
-          <button type="submit" class="modal-btn confirm" id="auth-submit-btn">Entrar</button>
+          <button type="button" class="modal-btn cancel" onclick="closeReportModal()">Cancelar</button>
+          <button type="button" class="modal-btn confirm" onclick="sendReport()">Enviar</button>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal de relatórios -->
-  <div class="modal" id="relatorios-modal">
-    <div class="modal-content">
-      <h2>Gerar Relatório</h2>
-      <div class="form-group">
-        <label for="relatorio-funcionario">Funcionário</label>
-        <select id="relatorio-funcionario" class="form-group input">
-          <option value="todos">Todos os funcionários</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="relatorio-periodo">Período</label>
-        <select id="relatorio-periodo" class="form-group input">
-          <option value="hoje">Hoje</option>
-          <option value="semana">Esta semana</option>
-          <option value="mes">Este mês</option>
-          <option value="custom">Personalizado</option>
-        </select>
-      </div>
-      <div id="custom-periodo" style="display: none;">
-        <div class="form-group">
-          <label for="relatorio-data-inicio">Data Início</label>
-          <input type="date" id="relatorio-data-inicio" class="form-group input">
-        </div>
-        <div class="form-group">
-          <label for="relatorio-data-fim">Data Fim</label>
-          <input type="date" id="relatorio-data-fim" class="form-group input">
-        </div>
-      </div>
-      <div class="modal-buttons">
-        <button type="button" class="modal-btn cancel" onclick="closeRelatoriosModal()">Cancelar</button>
-        <button type="button" class="modal-btn confirm" onclick="gerarRelatorio()">Gerar</button>
       </div>
     </div>
-  </div>
 
-  <!-- Modal de envio de espelho -->
-  <div class="modal" id="report-modal">
-    <div class="modal-content">
-      <h2>Enviar Espelho de Ponto</h2>
-      <div class="form-group">
-        <label for="report-gestor">Email do Gestor</label>
-        <input type="email" id="report-gestor" placeholder="Digite o email do gestor">
-      </div>
-      <div class="form-group">
-        <label for="report-start">Data Início</label>
-        <input type="date" id="report-start" class="form-group input">
-      </div>
-      <div class="form-group">
-        <label for="report-end">Data Fim</label>
-        <input type="date" id="report-end" class="form-group input">
-      </div>
-      <div class="modal-buttons">
-        <button type="button" class="modal-btn cancel" onclick="closeReportModal()">Cancelar</button>
-        <button type="button" class="modal-btn confirm" onclick="sendReport()">Enviar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    
-    // Configurações da API
-    const API_BASE_URL = 'http://localhost:3000/api';
-    
-    // Variáveis de estado
-    let currentUser = null;
-    let token = null;
-    let lastAction = null;
-    let registrosHoje = [];
-    let isAdmin = false;
-    
-    // Elementos DOM
-    const pontoBtn = document.getElementById('ponto-btn');
-    const statusEl = document.getElementById('status');
-    const historyList = document.getElementById('history-list');
-    const userInfoEl = document.getElementById('user-info');
-    const totalHoursEl = document.getElementById('total-hours');
-    const mainContainer = document.getElementById('main-container');
-    const historyContainer = document.getElementById('history-container');
-    const adminPanel = document.getElementById('admin-panel');
-    const authButtons = document.getElementById('auth-buttons');
-    const logoutBtn = document.getElementById('logout-btn');
-    const sendReportBtn = document.getElementById('send-report-btn');
-    
-    // Modais
-    const authModal = document.getElementById('auth-modal');
-    const authModalTitle = document.getElementById('auth-modal-title');
-    const authForm = document.getElementById('auth-form');
-    const authSubmitBtn = document.getElementById('auth-submit-btn');
-    const registerFields = document.getElementById('register-fields');
-    const relatoriosModal = document.getElementById('relatorios-modal');
-    const reportModal = document.getElementById('report-modal');
-    
-    // Abrir modal de autenticação
-    function openAuthModal(type) {
-      authModal.style.display = 'flex';
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+    <script>
+      // Configurações da API
+      const API_BASE_URL = 'http://localhost:3000/api';
       
-      if (type === 'login') {
-        authModalTitle.textContent = 'Login';
-        authSubmitBtn.textContent = 'Entrar';
-        registerFields.style.display = 'none';
-      } else {
-        authModalTitle.textContent = 'Cadastre-se';
-        authSubmitBtn.textContent = 'Cadastrar';
-        registerFields.style.display = 'block';
-      }
-    }
-    
-    // Fechar modal de autenticação
-    function closeAuthModal() {
-      authModal.style.display = 'none';
-      authForm.reset();
-    }
-    
-    // Formulário de autenticação
-    authForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
+      // Variáveis de estado
+      let currentUser = null;
+      let token = null;
+      let lastAction = null;
+      let registrosHoje = [];
+      let isGestor = false;
+      let map;
+      let marker;
       
-      const email = document.getElementById('auth-email').value;
-      const password = document.getElementById('auth-password').value;
-      
-      if (authSubmitBtn.textContent === 'Entrar') {
-        // Login
-        try {
-          const response = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok) {
-            token = data.token;
-            currentUser = data.user;
-            isAdmin = data.user.isAdmin || false;
-            
-            // Salvar token e user no localStorage
-            localStorage.setItem('pontoToken', token);
-            localStorage.setItem('pontoUser', JSON.stringify(currentUser));
-            
-            // Atualizar UI
-            updateUIAfterLogin();
-            closeAuthModal();
-            
-            // Carregar registros do dia
-            await loadRegistrosHoje();
-          } else {
-            alert(data.message || 'Erro ao fazer login');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          alert('Erro ao conectar com o servidor');
-        }
-      } else {
-        // Cadastro
-        const nome = document.getElementById('register-nome').value;
-        const setor = document.getElementById('register-setor').value;
-        const emailGestor = document.getElementById('register-gestor').value;
-        
-        try {
-          const response = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nome, email, password, setor, emailGestor })
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok) {
-            alert('Cadastro realizado com sucesso! Faça login para continuar.');
-            openAuthModal('login');
-          } else {
-            alert(data.message || 'Erro ao cadastrar');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          alert('Erro ao conectar com o servidor');
-        }
-      }
-    });
-    
-    // Atualizar UI após login
-    function updateUIAfterLogin() {
-      authButtons.style.display = 'none';
-      logoutBtn.style.display = 'block';
-      mainContainer.style.display = 'block';
-      historyContainer.style.display = 'block';
-      
-      userInfoEl.textContent = `${currentUser.nome} - ${currentUser.setor}`;
-      
-      if (isAdmin) {
-        adminPanel.style.display = 'block';
-        sendReportBtn.style.display = 'none';
-      } else {
-        adminPanel.style.display = 'none';
-        sendReportBtn.style.display = 'flex';
-      }
-      
-      // Configurar botão de ponto
-      pontoBtn.onclick = baterPonto;
-      sendReportBtn.onclick = openReportModal;
-    }
-    
-    // Logout
-    function logout() {
-      localStorage.removeItem('pontoToken');
-      localStorage.removeItem('pontoUser');
-      token = null;
-      currentUser = null;
-      isAdmin = false;
-      
-      // Resetar UI
-      authButtons.style.display = 'flex';
-      logoutBtn.style.display = 'none';
-      mainContainer.style.display = 'none';
-      historyContainer.style.display = 'none';
-      adminPanel.style.display = 'none';
-      userInfoEl.textContent = 'Faça login para começar';
-      
-      // Limpar histórico
-      historyList.innerHTML = '<li class="empty-history">Nenhum registro hoje</li>';
-      statusEl.textContent = 'Status: Aguardando primeiro registro';
-    }
-    
-    logoutBtn.addEventListener('click', logout);
-    
-    // Bater ponto
-    async function baterPonto() {
-      if (!currentUser) return;
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}/registros`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-          // Adicionar ao histórico local
-          registrosHoje.push({
-            tipo: data.tipo,
-            timestamp: new Date().toISOString()
-          });
-          
-          // Atualizar UI
-          updateUI(data.tipo);
-        } else {
-          alert(data.message || 'Erro ao bater ponto');
-        }
-      } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao conectar com o servidor');
-      }
-    }
-    
-    // Carregar registros do dia
-    async function loadRegistrosHoje() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/registros/hoje`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-          registrosHoje = data.registros;
-          
-          // Atualizar UI
-          updateHistoryUI();
-          
-          // Determinar última ação para o botão
-          if (registrosHoje.length > 0) {
-            lastAction = registrosHoje[registrosHoje.length - 1].tipo;
-            pontoBtn.innerHTML = `<i class="fas ${lastAction === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${lastAction === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
-            
-            // Atualizar status
-            const ultimoRegistro = registrosHoje[registrosHoje.length - 1];
-            statusEl.innerHTML = `Último registro: <strong>${formatTime(new Date(ultimoRegistro.timestamp))} (${ultimoRegistro.tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao carregar registros:', error);
-      }
-    }
-    
-    // Formatadores de data/hora
-    function formatDate(date) {
-      return date.toLocaleDateString('pt-BR');
-    }
-    
-    function formatTime(date) {
-      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    // Atualizar a interface com novo registro
-    function updateUI(tipo) {
-      const agora = new Date();
-      
-      // Atualizar status
-      statusEl.innerHTML = `Último registro: <strong>${formatTime(agora)} (${tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
-      
-      // Efeito visual
-      statusEl.style.animation = 'none';
-      void statusEl.offsetWidth;
-      statusEl.style.animation = 'highlight 0.5s ease';
-      
-      // Atualizar botão
-      pontoBtn.innerHTML = `<i class="fas ${tipo === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${tipo === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
-      
-      // Adicionar ao histórico
-      const emptyItem = document.querySelector('.empty-history');
-      if (emptyItem) emptyItem.remove();
-      
-      const item = document.createElement('li');
-      item.className = tipo;
-      
-      item.innerHTML = `
-        <div class="registro-info">
-          <span class="registro-horario">${formatTime(agora)}</span>
-          <span class="registro-tipo">${tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
-        </div>
-        <span class="registro-data">${formatDate(agora)}</span>
-      `;
-      
-      historyList.prepend(item);
-      
-      // Calcular horas trabalhadas
-      calcularHorasTrabalhadas();
-    }
-    
-    // Calcular horas trabalhadas no dia
-    function calcularHorasTrabalhadas() {
-      if (registrosHoje.length < 2) {
-        totalHoursEl.textContent = 'Horas trabalhadas: 00:00';
-        return;
-      }
-      
-      // Ordenar registros por timestamp
-      const registrosOrdenados = [...registrosHoje].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      
-      let totalMs = 0;
-      let entradaAtual = null;
-      
-      for (const registro of registrosOrdenados) {
-        if (registro.tipo === 'entrada') {
-          entradaAtual = new Date(registro.timestamp).getTime();
-        } else if (entradaAtual) {
-          totalMs += (new Date(registro.timestamp).getTime() - entradaAtual);
-          entradaAtual = null;
-        }
-      }
-      
-      // Converter milissegundos para horas e minutos
-      const totalHoras = Math.floor(totalMs / (1000 * 60 * 60));
-      const totalMinutos = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
-      
-      totalHoursEl.textContent = `Horas trabalhadas: ${String(totalHoras).padStart(2, '0')}:${String(totalMinutos).padStart(2, '0')}`;
-    }
-    
-    // Atualizar histórico na UI
-    function updateHistoryUI() {
-      if (registrosHoje.length === 0) return;
-      
-      // Limpar lista
-      historyList.innerHTML = '';
-      
-      // Adicionar registros (do mais recente para o mais antigo)
-      for (let i = registrosHoje.length - 1; i >= 0; i--) {
-        const registro = registrosHoje[i];
-        const item = document.createElement('li');
-        item.className = registro.tipo;
-        
-        item.innerHTML = `
-          <div class="registro-info">
-            <span class="registro-horario">${formatTime(new Date(registro.timestamp))}</span>
-            <span class="registro-tipo">${registro.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
-          </div>
-          <span class="registro-data">${formatDate(new Date(registro.timestamp))}</span>
-        `;
-        
-        historyList.appendChild(item);
-      }
-      
-      // Calcular horas trabalhadas
-      calcularHorasTrabalhadas();
-    }
-    
-    // Modal de envio de relatório
-    function openReportModal() {
-      // Definir datas padrão (hoje)
-      const hoje = new Date().toISOString().split('T')[0];
-      document.getElementById('report-start').value = hoje;
-      document.getElementById('report-end').value = hoje;
-      
-      // Preencher email do gestor se existir no usuário
-      if (currentUser.emailGestor) {
-        document.getElementById('report-gestor').value = currentUser.emailGestor;
-      }
-      
-      reportModal.style.display = 'flex';
-    }
-    
-    function closeReportModal() {
-      reportModal.style.display = 'none';
-    }
-    
-    // Enviar relatório por email
-    async function sendReport() {
-      const emailGestor = document.getElementById('report-gestor').value;
-      const startDate = document.getElementById('report-start').value;
-      const endDate = document.getElementById('report-end').value;
-      
-      if (!emailGestor || !startDate || !endDate) {
-        alert('Preencha todos os campos');
-        return;
-      }
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}/registros/enviar-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            userId: currentUser.id,
-            startDate,
-            endDate,
-            emailGestor
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-          alert('Espelho de ponto enviado com sucesso!');
-          closeReportModal();
-        } else {
-          alert(data.message || 'Erro ao enviar espelho de ponto');
-        }
-      } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao conectar com o servidor');
-      }
-    }
-    
-    // Verificar autenticação ao carregar a página
-    async function checkAuth() {
-      const savedToken = localStorage.getItem('pontoToken');
-      const savedUser = localStorage.getItem('pontoUser');
-      
-      if (savedToken && savedUser) {
-        try {
-          // Verificar token no servidor
-          const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-            headers: {
-              'Authorization': `Bearer ${savedToken}`
-            }
-          });
-          
-          if (response.ok) {
-            token = savedToken;
-            currentUser = JSON.parse(savedUser);
-            isAdmin = currentUser.isAdmin || false;
-            
-            updateUIAfterLogin();
-            await loadRegistrosHoje();
-          } else {
-            logout();
-          }
-        } catch (error) {
-          console.error('Erro ao verificar autenticação:', error);
-        }
-      }
-    }
-    
-    // Inicializar aplicação
-    document.addEventListener('DOMContentLoaded', checkAuth);
-  </script>
-</body>
-</html>
+      // Elementos DOM
+      const authScreen = document.getElementById('auth-screen');
+      const loginForm = document.getElementById('login-form');
+      const gestorLoginLink = document.getElementById('gestor-login-link');
+      const gestorLoginModal = document.getElementById('gestor-login-modal');
+      const gestorLoginForm = document.getElementById('gestor-login-form');
+      const pontoBtn = document.getElementById('ponto-btn');
+      const statusEl = document.getElementById('status');
+      const locationStatusEl = document.getElementById('location-status');
+      const historyList = document.getElementById('history-list');
+      const userInfoEl = document
