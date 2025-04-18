@@ -209,11 +209,7 @@ app.post('/api/auth/register-gestor', async (req, res) => {
     db.get("SELECT id FROM usuarios WHERE isGestor = 1 LIMIT 1", (err, row) => resolve(row));
   });
 
-  if (gestorExistente) {
-    return res.status(403).json({ 
-      message: 'Cadastro de gestor bloqueado. Acesse com um gestor existente.' 
-    });
-  }
+
 
   // Processar cadastro do primeiro gestor
   const { nome, email, password } = req.body;
@@ -494,4 +490,55 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+app.post('/api/colaboradores', authenticateToken, async (req, res) => {
+  if (!req.user.isGestor) {
+    return res.status(403).json({ message: 'Acesso restrito a gestores' });
+  }
+
+  const { nome, email, setor, password, latitude, longitude, raioPermitido } = req.body;
+
+  try {
+    // Verifica se e-mail já existe
+    const userExists = await new Promise((resolve, reject) => {
+      db.get("SELECT id FROM usuarios WHERE email = ?", [email], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    
+    if (userExists) {
+      return res.status(400).json({ message: 'E-mail já cadastrado' });
+    }
+    
+    // Criptografa a senha definida pelo gestor
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Cadastra o colaborador
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO usuarios 
+        (nome, email, password, setor, emailGestor, latitude, longitude, raioPermitido) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [nome, email, hashedPassword, setor, req.user.email, latitude, longitude, raioPermitido || 100],
+        function(err) {
+          if (err) reject(err);
+          resolve(this.lastID);
+        }
+      );
+    });
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Colaborador cadastrado com sucesso' 
+    });
+
+  } catch (error) {
+    console.error('Erro ao cadastrar colaborador:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Erro ao cadastrar colaborador' 
+    });
+  }
 });
