@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ponto Digital PRO</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -18,6 +18,8 @@
       --text-light: #8d99ae;
       --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      --danger-color: #ef233c;
+      --info-color: #4cc9f0;
     }
     
     * {
@@ -179,6 +181,14 @@
       border-left: 4px solid var(--warning-color);
     }
     
+    #history-list li.intervalo {
+      border-left: 4px solid var(--info-color);
+    }
+    
+    #history-list li.hora-extra {
+      border-left: 4px solid var(--danger-color);
+    }
+    
     .registro-info {
       display: flex;
       flex-direction: column;
@@ -259,7 +269,7 @@
       font-weight: 500;
     }
     
-    .form-group input, .form-group select {
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%;
       padding: 12px 15px;
       border: 1px solid #ddd;
@@ -268,7 +278,12 @@
       transition: var(--transition);
     }
     
-    .form-group input:focus, .form-group select:focus {
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
       border-color: var(--primary-light);
       outline: none;
       box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
@@ -454,6 +469,56 @@
       text-decoration: underline;
     }
     
+    .time-summary {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding: 15px;
+      background: var(--secondary-color);
+      border-radius: 10px;
+    }
+    
+    .time-card {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .time-card h4 {
+      margin-bottom: 5px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+    
+    .time-card p {
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 1.1rem;
+    }
+    
+    .time-card.positive {
+      color: var(--success-color);
+    }
+    
+    .time-card.negative {
+      color: var(--warning-color);
+    }
+    
+    .justificativa-btn {
+      margin-top: 10px;
+      padding: 8px 15px;
+      background: var(--warning-color);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: var(--transition);
+    }
+    
+    .justificativa-btn:hover {
+      background: #d91a5b;
+    }
+    
     @media (max-width: 768px) {
       .app-container {
         padding: 15px;
@@ -485,6 +550,11 @@
       
       .registro-data {
         margin-top: 5px;
+      }
+      
+      .time-summary {
+        flex-direction: column;
+        gap: 10px;
       }
     }
     
@@ -537,8 +607,27 @@
       <div class="status" id="status">Status: Aguardando primeiro registro</div>
       <div class="location-status" id="location-status"></div>
       
+      <div class="time-summary" id="time-summary">
+        <div class="time-card">
+          <h4>Horas Trabalhadas</h4>
+          <p id="horas-trabalhadas">00:00</p>
+        </div>
+        <div class="time-card">
+          <h4>Horas Extras</h4>
+          <p id="horas-extras">00:00</p>
+        </div>
+        <div class="time-card">
+          <h4>Banco de Horas</h4>
+          <p id="banco-horas">00:00</p>
+        </div>
+      </div>
+      
       <button class="send-report-btn" id="send-report-btn">
         <i class="fas fa-paper-plane"></i> Enviar Espelho de Ponto
+      </button>
+      
+      <button class="justificativa-btn" id="justificativa-btn" style="display: none;">
+        <i class="fas fa-edit"></i> Justificar Ponto
       </button>
     </div>
 
@@ -558,11 +647,14 @@
       <p>Bem-vindo, gestor. Aqui você pode gerenciar seus colaboradores.</p>
       
       <div class="gestor-actions">
-        <button class="gestor-btn" onclick="openAddColaboradorModal()">
+        <button class="gestor-btn" id="add-colaborador-btn">
           <i class="fas fa-user-plus"></i> Adicionar Colaborador
         </button>
-        <button class="gestor-btn" onclick="loadColaboradores()">
+        <button class="gestor-btn" id="refresh-colaboradores-btn">
           <i class="fas fa-sync-alt"></i> Atualizar Lista
+        </button>
+        <button class="gestor-btn" id="config-jornada-btn">
+          <i class="fas fa-clock"></i> Configurar Jornada
         </button>
       </div>
       
@@ -585,7 +677,7 @@
             <input type="password" id="gestor-password" required placeholder="Digite sua senha">
           </div>
           <div class="modal-buttons">
-            <button type="button" class="modal-btn cancel" onclick="closeGestorLoginModal()">Cancelar</button>
+            <button type="button" class="modal-btn cancel" id="cancel-gestor-login">Cancelar</button>
             <button type="submit" class="modal-btn confirm">Entrar</button>
           </div>
         </form>
@@ -596,9 +688,8 @@
         </div>
       </div>
     </div>
-      </div>
-    </div>
 
+    <!-- Modal de cadastro de gestor -->
     <div class="modal" id="gestor-cadastro-modal">
       <div class="modal-content">
         <h2>Cadastro de Gestor</h2>
@@ -616,7 +707,7 @@
             <input type="password" id="gestor-cadastro-senha" required minlength="8">
           </div>
           <div class="modal-buttons">
-            <button type="button" class="modal-btn cancel" onclick="closeGestorCadastroModal()">Cancelar</button>
+            <button type="button" class="modal-btn cancel" id="cancel-gestor-cadastro">Cancelar</button>
             <button type="submit" class="modal-btn confirm">Cadastrar</button>
           </div>
         </form>
@@ -630,35 +721,112 @@
         <form id="colaborador-form">
           <div class="form-group">
             <label for="colaborador-nome">Nome Completo</label>
-            <input type="text" id="colaborador-nome" placeholder="Digite o nome do colaborador">
+            <input type="text" id="colaborador-nome" placeholder="Digite o nome do colaborador" required>
           </div>
           <div class="form-group">
             <label for="colaborador-email">E-mail</label>
-            <input type="email" id="colaborador-email" placeholder="Digite o e-mail do colaborador">
+            <input type="email" id="colaborador-email" placeholder="Digite o e-mail do colaborador" required>
           </div>
           <div class="form-group">
             <label for="colaborador-password">Senha Inicial</label>
             <input type="password" id="colaborador-password" required 
-                   placeholder="Defina a senha inicial">
+                   placeholder="Defina a senha inicial" minlength="8">
           </div>
           <div class="form-group">
             <label for="colaborador-setor">Setor</label>
-            <input type="text" id="colaborador-setor" placeholder="Digite o setor do colaborador">
+            <input type="text" id="colaborador-setor" placeholder="Digite o setor do colaborador" required>
+          </div>
+          <div class="form-group">
+            <label for="colaborador-jornada">Jornada de Trabalho</label>
+            <select id="colaborador-jornada" required>
+              <option value="8">8 horas diárias (44h semanais)</option>
+              <option value="6">6 horas diárias (36h semanais)</option>
+              <option value="4">4 horas diárias (20h semanais)</option>
+              <option value="custom">Personalizada</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Localização para bater ponto</label>
-            <div id="map" style="height: 250px;"></div>
-            <div class="location-status" id="map-status">Clique no mapa para definir a localização</div>
-            <input type="hidden" id="colaborador-latitude">
-            <input type="hidden" id="colaborador-longitude">
+            <button type="button" class="gestor-btn" id="obter-localizacao-btn">
+              <i class="fas fa-location-arrow"></i> Obter Minha Localização Atual
+            </button>
+            <div class="location-status" id="map-status">Clique no botão para obter sua localização atual</div>
+            <input type="hidden" id="colaborador-latitude" required>
+            <input type="hidden" id="colaborador-longitude" required>
           </div>
           <div class="form-group">
             <label for="colaborador-raio">Raio permitido (metros)</label>
-            <input type="number" id="colaborador-raio" placeholder="Digite o raio em metros" value="100">
+            <input type="number" id="colaborador-raio" placeholder="Digite o raio em metros" value="100" required>
           </div>
           <div class="modal-buttons">
-            <button type="button" class="modal-btn cancel" onclick="closeAddColaboradorModal()">Cancelar</button>
+            <button type="button" class="modal-btn cancel" id="cancel-add-colaborador">Cancelar</button>
             <button type="submit" class="modal-btn confirm">Cadastrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de configuração de jornada -->
+    <div class="modal" id="config-jornada-modal">
+      <div class="modal-content">
+        <h2>Configurar Jornada de Trabalho</h2>
+        <form id="jornada-form">
+          <div class="form-group">
+            <label for="jornada-padrao">Jornada Padrão</label>
+            <select id="jornada-padrao">
+              <option value="8">8 horas diárias (44h semanais)</option>
+              <option value="6">6 horas diárias (36h semanais)</option>
+              <option value="4">4 horas diárias (20h semanais)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="intervalo-minimo">Intervalo Mínimo para Almoço (minutos)</label>
+            <input type="number" id="intervalo-minimo" value="60" min="30">
+          </div>
+          <div class="form-group">
+            <label for="tolerancia-atraso">Tolerância para Atraso (minutos)</label>
+            <input type="number" id="tolerancia-atraso" value="10" min="0">
+          </div>
+          <div class="form-group">
+            <label for="hora-extra-minima">Hora Extra Mínima Diária (minutos)</label>
+            <input type="number" id="hora-extra-minima" value="15" min="0">
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel" id="cancel-config-jornada">Cancelar</button>
+            <button type="submit" class="modal-btn confirm">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de justificativa -->
+    <div class="modal" id="justificativa-modal">
+      <div class="modal-content">
+        <h2>Justificar Ponto</h2>
+        <form id="justificativa-form">
+          <div class="form-group">
+            <label for="justificativa-data">Data</label>
+            <input type="date" id="justificativa-data" required>
+          </div>
+          <div class="form-group">
+            <label for="justificativa-horario">Horário</label>
+            <input type="time" id="justificativa-horario" required>
+          </div>
+          <div class="form-group">
+            <label for="justificativa-tipo">Tipo</label>
+            <select id="justificativa-tipo" required>
+              <option value="entrada">Entrada</option>
+              <option value="saida">Saída</option>
+              <option value="intervalo">Intervalo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="justificativa-motivo">Motivo</label>
+            <textarea id="justificativa-motivo" rows="4" required placeholder="Descreva o motivo da justificativa"></textarea>
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn cancel" id="cancel-justificativa">Cancelar</button>
+            <button type="submit" class="modal-btn confirm">Enviar</button>
           </div>
         </form>
       </div>
@@ -670,20 +838,23 @@
         <h2>Enviar Espelho de Ponto</h2>
         <div class="form-group">
           <label for="report-start">Data Início</label>
-          <input type="date" id="report-start" class="form-group input">
+          <input type="date" id="report-start" required>
         </div>
         <div class="form-group">
           <label for="report-end">Data Fim</label>
-          <input type="date" id="report-end" class="form-group input">
+          <input type="date" id="report-end" required>
+        </div>
+        <div class="form-group">
+          <label for="report-email">E-mail para envio</label>
+          <input type="email" id="report-email" required>
         </div>
         <div class="modal-buttons">
-          <button type="button" class="modal-btn cancel" onclick="closeReportModal()">Cancelar</button>
-          <button type="button" class="modal-btn confirm" onclick="sendReport()">Enviar</button>
+          <button type="button" class="modal-btn cancel" id="cancel-report">Cancelar</button>
+          <button type="button" class="modal-btn confirm" id="confirm-report">Enviar</button>
         </div>
       </div>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
     <script>
       // Configurações da API
       const API_BASE_URL = 'http://localhost:3000/api';
@@ -691,11 +862,8 @@
       // Variáveis de estado
       let currentUser = null;
       let token = null;
-      let lastAction = null;
       let registrosHoje = [];
       let isGestor = false;
-      let map;
-      let marker;
       
       // Elementos DOM
       const authScreen = document.getElementById('auth-screen');
@@ -715,19 +883,288 @@
       const colaboradoresList = document.getElementById('colaboradores-list');
       const logoutBtn = document.getElementById('logout-btn');
       const sendReportBtn = document.getElementById('send-report-btn');
+      const addColaboradorBtn = document.getElementById('add-colaborador-btn');
+      const refreshColaboradoresBtn = document.getElementById('refresh-colaboradores-btn');
+      const configJornadaBtn = document.getElementById('config-jornada-btn');
       const addColaboradorModal = document.getElementById('add-colaborador-modal');
       const colaboradorForm = document.getElementById('colaborador-form');
+      const obterLocalizacaoBtn = document.getElementById('obter-localizacao-btn');
       const reportModal = document.getElementById('report-modal');
+      const confirmReportBtn = document.getElementById('confirm-report');
+      const justificativaBtn = document.getElementById('justificativa-btn');
+      const justificativaModal = document.getElementById('justificativa-modal');
+      const configJornadaModal = document.getElementById('config-jornada-modal');
+      const gestorCadastroModal = document.getElementById('gestor-cadastro-modal');
+      const gestorCadastroForm = document.getElementById('gestor-cadastro-form');
+      const primeiroAcessoGestor = document.getElementById('primeiro-acesso-gestor');
+      const horasTrabalhadasEl = document.getElementById('horas-trabalhadas');
+      const horasExtrasEl = document.getElementById('horas-extras');
+      const bancoHorasEl = document.getElementById('banco-horas');
 
-      // Event Listeners
-      loginForm.addEventListener('submit', handleColaboradorLogin);
-      gestorLoginLink.addEventListener('click', openGestorLoginModal);
-      gestorLoginForm.addEventListener('submit', handleGestorLogin);
-      colaboradorForm.addEventListener('submit', handleAddColaborador);
-      logoutBtn.addEventListener('click', logout);
-      sendReportBtn.addEventListener('click', openReportModal);
+      // Funções auxiliares
+      function formatTime(ms) {
+        const horas = Math.floor(ms / (1000 * 60 * 60));
+        const minutos = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+      }
 
-      // Funções de Login
+      function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c;
+      }
+
+      // Funções de UI
+      function updateUIAfterLogin() {
+        authScreen.style.display = 'none';
+        mainContainer.style.display = 'block';
+        historyContainer.style.display = 'block';
+        logoutBtn.style.display = 'block';
+        
+        if (isGestor) {
+          gestorPanel.style.display = 'block';
+          loadColaboradores();
+        } else {
+          gestorPanel.style.display = 'none';
+          verificarLocalizacao();
+        }
+        
+        userInfoEl.textContent = `${currentUser.nome} (${currentUser.setor})`;
+      }
+
+      async function loadRegistrosHoje() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/registros/hoje`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            registrosHoje = data.registros;
+            updateHistoryList();
+            
+            horasTrabalhadasEl.textContent = data.horasTrabalhadas;
+            horasExtrasEl.textContent = data.horasExtras;
+            bancoHorasEl.textContent = data.bancoHoras;
+            totalHoursEl.textContent = `Horas trabalhadas: ${data.horasTrabalhadas}`;
+            
+            if (registrosHoje.length > 0) {
+              const ultimoRegistro = registrosHoje[registrosHoje.length - 1];
+              statusEl.innerHTML = `Status: Último registro foi <strong>${ultimoRegistro.tipo}</strong> às ${new Date(ultimoRegistro.timestamp).toLocaleTimeString()}`;
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao carregar registros:', error);
+        }
+      }
+
+      function updateHistoryList() {
+        historyList.innerHTML = '';
+        
+        if (registrosHoje.length === 0) {
+          historyList.innerHTML = '<li class="empty-history">Nenhum registro hoje</li>';
+          return;
+        }
+        
+        registrosHoje.forEach(registro => {
+          const li = document.createElement('li');
+          li.className = registro.tipo;
+          
+          const data = new Date(registro.timestamp);
+          const dataFormatada = data.toLocaleDateString('pt-BR');
+          const horaFormatada = data.toLocaleTimeString('pt-BR');
+          
+          li.innerHTML = `
+            <div class="registro-info">
+              <span class="registro-horario">${horaFormatada}</span>
+              <span class="registro-tipo">${registro.tipo === 'entrada' ? 'Entrada' : registro.tipo === 'saida' ? 'Saída' : 'Intervalo'}</span>
+            </div>
+            <div class="registro-data">${dataFormatada}</div>
+          `;
+          
+          historyList.appendChild(li);
+        });
+      }
+
+      async function verificarLocalizacao() {
+        if (!currentUser.latitude || !currentUser.longitude) {
+          locationStatusEl.textContent = 'Localização não configurada - contate seu gestor';
+          locationStatusEl.className = 'location-status invalid';
+          pontoBtn.disabled = true;
+          justificativaBtn.style.display = 'block';
+          return;
+        }
+
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            });
+          });
+
+          const distance = calcularDistancia(
+            position.coords.latitude,
+            position.coords.longitude,
+            currentUser.latitude,
+            currentUser.longitude
+          );
+
+          if (distance <= (currentUser.raioPermitido || 100)) {
+            locationStatusEl.textContent = `Você está no local permitido (${Math.round(distance)}m do ponto central)`;
+            locationStatusEl.className = 'location-status valid';
+            pontoBtn.disabled = false;
+            justificativaBtn.style.display = 'none';
+          } else {
+            locationStatusEl.textContent = `Você está a ${Math.round(distance)}m do local permitido (máximo ${currentUser.raioPermitido || 100}m)`;
+            locationStatusEl.className = 'location-status invalid';
+            pontoBtn.disabled = true;
+            justificativaBtn.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Erro ao obter localização:', error);
+          locationStatusEl.textContent = 'Erro ao verificar localização - ative a geolocalização';
+          locationStatusEl.className = 'location-status invalid';
+          pontoBtn.disabled = true;
+          justificativaBtn.style.display = 'block';
+        }
+      }
+
+      // Funções dos modais
+      function openGestorLoginModal() {
+        gestorLoginModal.style.display = 'flex';
+      }
+
+      function closeGestorLoginModal() {
+        gestorLoginModal.style.display = 'none';
+      }
+
+      function openGestorCadastroModal() {
+        gestorCadastroModal.style.display = 'flex';
+        closeGestorLoginModal();
+      }
+
+      function closeGestorCadastroModal() {
+        gestorCadastroModal.style.display = 'none';
+      }
+
+      function openAddColaboradorModal() {
+        addColaboradorModal.style.display = 'flex';
+      }
+
+      function closeAddColaboradorModal() {
+        addColaboradorModal.style.display = 'none';
+      }
+
+      function openConfigJornadaModal() {
+        configJornadaModal.style.display = 'flex';
+        loadJornadaConfig();
+      }
+
+      function closeConfigJornadaModal() {
+        configJornadaModal.style.display = 'none';
+      }
+
+      function openJustificativaModal() {
+        justificativaModal.style.display = 'flex';
+        document.getElementById('justificativa-data').valueAsDate = new Date();
+        document.getElementById('justificativa-horario').value = new Date().toTimeString().substring(0, 5);
+      }
+
+      function closeJustificativaModal() {
+        justificativaModal.style.display = 'none';
+      }
+
+      function openReportModal() {
+        reportModal.style.display = 'flex';
+        const hoje = new Date();
+        document.getElementById('report-start').valueAsDate = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        document.getElementById('report-end').valueAsDate = hoje;
+        document.getElementById('report-email').value = currentUser.email;
+      }
+
+      function closeReportModal() {
+        reportModal.style.display = 'none';
+      }
+
+      // Funções de carregamento de dados
+      async function loadColaboradores() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/colaboradores`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            colaboradoresList.innerHTML = '';
+            
+            if (data.colaboradores.length === 0) {
+              colaboradoresList.innerHTML = '<p>Nenhum colaborador cadastrado</p>';
+              return;
+            }
+            
+            data.colaboradores.forEach(colaborador => {
+              const div = document.createElement('div');
+              div.className = 'colaborador-item';
+              
+              div.innerHTML = `
+                <div class="colaborador-info">
+                  <div class="colaborador-nome">${colaborador.nome}</div>
+                  <div class="colaborador-email">${colaborador.email} - ${colaborador.setor}</div>
+                </div>
+                <div class="colaborador-actions">
+                  <button class="gestor-btn small" data-id="${colaborador.id}">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              `;
+              
+              colaboradoresList.appendChild(div);
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao carregar colaboradores:', error);
+        }
+      }
+
+      async function loadJornadaConfig() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/config/jornada`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            document.getElementById('jornada-padrao').value = data.config.horasDiarias;
+            document.getElementById('intervalo-minimo').value = data.config.intervaloMinimo;
+            document.getElementById('tolerancia-atraso').value = data.config.toleranciaAtraso;
+            document.getElementById('hora-extra-minima').value = data.config.horaExtraMinima;
+          }
+        } catch (error) {
+          console.error('Erro ao carregar configurações:', error);
+        }
+      }
+
+      // Funções de manipulação de eventos
       async function handleColaboradorLogin(e) {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
@@ -763,53 +1200,6 @@
         }
       }
 
-      // Event Listeners
-document.getElementById('primeiro-acesso-gestor').addEventListener('click', function(e) {
-  e.preventDefault();
-  closeGestorLoginModal();
-  openGestorCadastroModal();
-});
-
-document.getElementById('gestor-cadastro-form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const gestor = {
-    nome: document.getElementById('gestor-cadastro-nome').value,
-    email: document.getElementById('gestor-cadastro-email').value,
-    password: document.getElementById('gestor-cadastro-senha').value
-  };
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/register-gestor`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(gestor)
-    });
-
-    const data = await response.json();
-    
-    if (response.ok) {
-      alert('Gestor cadastrado com sucesso! Faça login.');
-      closeGestorCadastroModal();
-      openGestorLoginModal();
-    } else {
-      alert(data.message || 'Erro no cadastro');
-    }
-  } catch (error) {
-    console.error('Erro:', error);
-    alert('Erro ao conectar com o servidor');
-  }
-});
-
-function openGestorCadastroModal() {
-  document.getElementById('gestor-cadastro-modal').style.display = 'flex';
-}
-
-function closeGestorCadastroModal() {
-  document.getElementById('gestor-cadastro-modal').style.display = 'none';
-  document.getElementById('gestor-cadastro-form').reset();
-}
-
       async function handleGestorLogin(e) {
         e.preventDefault();
         const email = document.getElementById('gestor-email').value;
@@ -834,11 +1224,10 @@ function closeGestorCadastroModal() {
             localStorage.setItem('pontoToken', token);
             localStorage.setItem('pontoUser', JSON.stringify(currentUser));
             
-            updateUIAfterLogin();
             closeGestorLoginModal();
-            loadColaboradores();
+            updateUIAfterLogin();
           } else {
-            alert(data.message || 'Credenciais inválidas');
+            alert(data.message || 'Erro ao fazer login como gestor');
           }
         } catch (error) {
           console.error('Erro:', error);
@@ -846,100 +1235,33 @@ function closeGestorCadastroModal() {
         }
       }
 
-      // Funções de UI
-      function updateUIAfterLogin() {
-        authScreen.style.display = 'none';
-        logoutBtn.style.display = 'block';
-        userInfoEl.textContent = `${currentUser.nome} - ${currentUser.setor}`;
+      async function handleGestorCadastro(e) {
+        e.preventDefault();
+        const nome = document.getElementById('gestor-cadastro-nome').value;
+        const email = document.getElementById('gestor-cadastro-email').value;
+        const password = document.getElementById('gestor-cadastro-senha').value;
 
-        if (isGestor) {
-          mainContainer.style.display = 'none';
-          historyContainer.style.display = 'none';
-          gestorPanel.style.display = 'block';
-        } else {
-          mainContainer.style.display = 'block';
-          historyContainer.style.display = 'block';
-          gestorPanel.style.display = 'none';
-          verificarLocalizacao();
-        }
-      }
-
-      function logout() {
-        localStorage.removeItem('pontoToken');
-        localStorage.removeItem('pontoUser');
-        token = null;
-        currentUser = null;
-        isGestor = false;
-
-        authScreen.style.display = 'block';
-        logoutBtn.style.display = 'none';
-        mainContainer.style.display = 'none';
-        historyContainer.style.display = 'none';
-        gestorPanel.style.display = 'none';
-        userInfoEl.textContent = 'Faça login para registrar seu ponto';
-
-        historyList.innerHTML = '<li class="empty-history">Nenhum registro hoje</li>';
-        statusEl.textContent = 'Status: Aguardando primeiro registro';
-      }
-
-      // Funções do Gestor
-      function openGestorLoginModal() {
-        gestorLoginModal.style.display = 'flex';
-      }
-
-      function closeGestorLoginModal() {
-        gestorLoginModal.style.display = 'none';
-        gestorLoginForm.reset();
-      }
-
-      function openAddColaboradorModal() {
-        initMap();
-        addColaboradorModal.style.display = 'flex';
-      }
-
-      function closeAddColaboradorModal() {
-        addColaboradorModal.style.display = 'none';
-        colaboradorForm.reset();
-      }
-
-      async function loadColaboradores() {
         try {
-          const response = await fetch(`${API_BASE_URL}/colaboradores`, {
+          const response = await fetch(`${API_BASE_URL}/auth/register-gestor`, {
+            method: 'POST',
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nome, email, password })
           });
 
           const data = await response.json();
 
           if (response.ok) {
-            if (data.colaboradores.length === 0) {
-              colaboradoresList.innerHTML = '<p>Nenhum colaborador cadastrado</p>';
-              return;
-            }
-
-            let html = '';
-            data.colaboradores.forEach(colaborador => {
-              html += `
-                <div class="colaborador-item">
-                  <div class="colaborador-info">
-                    <div class="colaborador-nome">${colaborador.nome}</div>
-                    <div class="colaborador-email">${colaborador.email} - ${colaborador.setor}</div>
-                  </div>
-                  <div class="colaborador-actions">
-                    <button class="gestor-btn" onclick="verRegistrosColaborador(${colaborador.id})">
-                      <i class="fas fa-history"></i> Registros
-                    </button>
-                  </div>
-                </div>
-              `;
-            });
-
-            colaboradoresList.innerHTML = html;
+            alert(data.message || 'Gestor cadastrado com sucesso');
+            closeGestorCadastroModal();
+            openGestorLoginModal();
+          } else {
+            alert(data.message || 'Erro ao cadastrar gestor');
           }
         } catch (error) {
-          console.error('Erro ao carregar colaboradores:', error);
-          colaboradoresList.innerHTML = '<p>Erro ao carregar colaboradores</p>';
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
         }
       }
 
@@ -947,10 +1269,12 @@ function closeGestorCadastroModal() {
         e.preventDefault();
         const nome = document.getElementById('colaborador-nome').value;
         const email = document.getElementById('colaborador-email').value;
+        const password = document.getElementById('colaborador-password').value;
         const setor = document.getElementById('colaborador-setor').value;
         const latitude = document.getElementById('colaborador-latitude').value;
         const longitude = document.getElementById('colaborador-longitude').value;
         const raioPermitido = document.getElementById('colaborador-raio').value;
+        const jornadaDiaria = document.getElementById('colaborador-jornada').value;
 
         try {
           const response = await fetch(`${API_BASE_URL}/colaboradores`, {
@@ -959,20 +1283,22 @@ function closeGestorCadastroModal() {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({
-              nome,
-              email,
-              setor,
-              latitude: parseFloat(latitude),
-              longitude: parseFloat(longitude),
-              raioPermitido: parseInt(raioPermitido) || 100
+            body: JSON.stringify({ 
+              nome, 
+              email, 
+              password, 
+              setor, 
+              latitude, 
+              longitude, 
+              raioPermitido, 
+              jornadaDiaria 
             })
           });
 
           const data = await response.json();
 
           if (response.ok) {
-            alert('Colaborador cadastrado com sucesso!');
+            alert(data.message || 'Colaborador cadastrado com sucesso');
             closeAddColaboradorModal();
             loadColaboradores();
           } else {
@@ -984,98 +1310,120 @@ function closeGestorCadastroModal() {
         }
       }
 
-      // Funções do Mapa
-      function initMap() {
-        const mapElement = document.getElementById('map');
-        mapElement.innerHTML = '';
-
-        const initialLocation = { lat: -23.5505, lng: -46.6333 }; // São Paulo
-
-        map = new google.maps.Map(mapElement, {
-          center: initialLocation,
-          zoom: 15
-        });
-
-        marker = new google.maps.Marker({
-          position: initialLocation,
-          map: map,
-          draggable: true
-        });
-
-        map.addListener('click', (e) => {
-          marker.setPosition(e.latLng);
-          updateLocationStatus(e.latLng.lat(), e.latLng.lng());
-        });
-
-        marker.addListener('dragend', (e) => {
-          updateLocationStatus(e.latLng.lat(), e.latLng.lng());
-        });
-      }
-
-      function updateLocationStatus(lat, lng) {
-        document.getElementById('colaborador-latitude').value = lat;
-        document.getElementById('colaborador-longitude').value = lng;
-        document.getElementById('map-status').textContent = `Localização definida: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        document.getElementById('map-status').className = 'location-status valid';
-      }
-
-      // Funções do Colaborador
-      async function verificarLocalizacao() {
-        if (!currentUser.latitude || !currentUser.longitude) {
-          locationStatusEl.textContent = 'Localização não configurada - contate seu gestor';
-          locationStatusEl.className = 'location-status invalid';
-          pontoBtn.disabled = true;
-          return;
-        }
+      async function handleConfigJornada(e) {
+        e.preventDefault();
+        const horasDiarias = document.getElementById('jornada-padrao').value;
+        const intervaloMinimo = document.getElementById('intervalo-minimo').value;
+        const toleranciaAtraso = document.getElementById('tolerancia-atraso').value;
+        const horaExtraMinima = document.getElementById('hora-extra-minima').value;
 
         try {
-          const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
+          const response = await fetch(`${API_BASE_URL}/config/jornada`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+              horasDiarias, 
+              intervaloMinimo, 
+              toleranciaAtraso, 
+              horaExtraMinima 
+            })
           });
 
-          const distance = await calcularDistancia(
-            position.coords.latitude,
-            position.coords.longitude,
-            currentUser.latitude,
-            currentUser.longitude
-          );
+          const data = await response.json();
 
-          if (distance <= (currentUser.raioPermitido || 100)) {
-            locationStatusEl.textContent = `Você está no local permitido (${Math.round(distance)}m do ponto central)`;
-            locationStatusEl.className = 'location-status valid';
-            pontoBtn.disabled = false;
+          if (response.ok) {
+            alert(data.message || 'Configurações atualizadas com sucesso');
+            closeConfigJornadaModal();
           } else {
-            locationStatusEl.textContent = `Você está a ${Math.round(distance)}m do local permitido (máximo ${currentUser.raioPermitido || 100}m)`;
-            locationStatusEl.className = 'location-status invalid';
-            pontoBtn.disabled = true;
+            alert(data.message || 'Erro ao atualizar configurações');
           }
         } catch (error) {
-          console.error('Erro ao obter localização:', error);
-          locationStatusEl.textContent = 'Erro ao verificar localização - ative a geolocalização';
-          locationStatusEl.className = 'location-status invalid';
-          pontoBtn.disabled = true;
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
         }
       }
 
-      function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
+      async function handleJustificativa(e) {
+        e.preventDefault();
+        const data = document.getElementById('justificativa-data').value;
+        const horario = document.getElementById('justificativa-horario').value;
+        const tipo = document.getElementById('justificativa-tipo').value;
+        const motivo = document.getElementById('justificativa-motivo').value;
 
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        try {
+          const response = await fetch(`${API_BASE_URL}/registros/justificar`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+              data, 
+              horario, 
+              tipo, 
+              motivo 
+            })
+          });
 
-        return R * c;
+          const dataResponse = await response.json();
+
+          if (response.ok) {
+            alert(dataResponse.message || 'Justificativa enviada com sucesso');
+            closeJustificativaModal();
+          } else {
+            alert(dataResponse.message || 'Erro ao enviar justificativa');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
+      }
+
+      async function handleSendReport() {
+        const startDate = document.getElementById('report-start').value;
+        const endDate = document.getElementById('report-end').value;
+        const email = document.getElementById('report-email').value;
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/registros/enviar-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+              userId: currentUser.id,
+              startDate, 
+              endDate, 
+              email 
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert(data.message || 'Espelho de ponto enviado com sucesso');
+            closeReportModal();
+          } else {
+            alert(data.message || 'Erro ao enviar espelho de ponto');
+          }
+        } catch (error) {
+          console.error('Erro:', error);
+          alert('Erro ao conectar com o servidor');
+        }
       }
 
       async function baterPonto() {
         try {
           const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            });
           });
 
           const response = await fetch(`${API_BASE_URL}/registros`, {
@@ -1100,7 +1448,8 @@ function closeGestorCadastroModal() {
               longitude: position.coords.longitude
             });
             
-            updateUI(data.tipo);
+            await loadRegistrosHoje();
+            verificarLocalizacao();
           } else {
             alert(data.message || 'Erro ao bater ponto');
           }
@@ -1110,209 +1459,124 @@ function closeGestorCadastroModal() {
         }
       }
 
-      async function loadRegistrosHoje() {
-        try {
-          const response = await fetch(`${API_BASE_URL}/registros/hoje`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+      function logout() {
+        localStorage.removeItem('pontoToken');
+        localStorage.removeItem('pontoUser');
+        currentUser = null;
+        token = null;
+        isGestor = false;
+        
+        authScreen.style.display = 'block';
+        mainContainer.style.display = 'none';
+        historyContainer.style.display = 'none';
+        gestorPanel.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+      }
 
-          const data = await response.json();
-
-          if (response.ok) {
-            registrosHoje = data.registros;
-            updateHistoryUI();
-
-            if (registrosHoje.length > 0) {
-              lastAction = registrosHoje[registrosHoje.length - 1].tipo;
-              pontoBtn.innerHTML = `<i class="fas ${lastAction === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${lastAction === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
-              
-              const ultimoRegistro = registrosHoje[registrosHoje.length - 1];
-              statusEl.innerHTML = `Último registro: <strong>${formatTime(new Date(ultimoRegistro.timestamp))} (${ultimoRegistro.tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
-            }
-          }
-        } catch (error) {
-          console.error('Erro ao carregar registros:', error);
+      function checkAuth() {
+        const storedToken = localStorage.getItem('pontoToken');
+        const storedUser = localStorage.getItem('pontoUser');
+        
+        if (storedToken && storedUser) {
+          token = storedToken;
+          currentUser = JSON.parse(storedUser);
+          isGestor = currentUser.isGestor || false;
+          
+          updateUIAfterLogin();
+          loadRegistrosHoje();
         }
       }
 
-      function updateUI(tipo) {
-        const agora = new Date();
-        statusEl.innerHTML = `Último registro: <strong>${formatTime(agora)} (${tipo === 'entrada' ? 'Entrada' : 'Saída'})</strong>`;
-        
-        statusEl.style.animation = 'none';
-        void statusEl.offsetWidth;
-        statusEl.style.animation = 'highlight 0.5s ease';
-        
-        pontoBtn.innerHTML = `<i class="fas ${tipo === 'entrada' ? 'fa-sign-out-alt' : 'fa-sign-in-alt'}"></i> ${tipo === 'entrada' ? 'Registrar Saída' : 'Registrar Entrada'}`;
-        
-        const emptyItem = document.querySelector('.empty-history');
-        if (emptyItem) emptyItem.remove();
-        
-        const item = document.createElement('li');
-        item.className = tipo;
-        
-        item.innerHTML = `
-          <div class="registro-info">
-            <span class="registro-horario">${formatTime(agora)}</span>
-            <span class="registro-tipo">${tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
-          </div>
-          <span class="registro-data">${formatDate(agora)}</span>
-        `;
-        
-        historyList.prepend(item);
-        calcularHorasTrabalhadas();
-      }
+      function obterLocalizacao() {
+        const mapStatus = document.getElementById('map-status');
+        mapStatus.textContent = 'Obtendo localização...';
+        mapStatus.className = 'location-status';
 
-      function updateHistoryUI() {
-        if (registrosHoje.length === 0) return;
-        
-        historyList.innerHTML = '';
-        
-        for (let i = registrosHoje.length - 1; i >= 0; i--) {
-          const registro = registrosHoje[i];
-          const item = document.createElement('li');
-          item.className = registro.tipo;
-          
-          item.innerHTML = `
-            <div class="registro-info">
-              <span class="registro-horario">${formatTime(new Date(registro.timestamp))}</span>
-              <span class="registro-tipo">${registro.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
-            </div>
-            <span class="registro-data">${formatDate(new Date(registro.timestamp))}</span>
-          `;
-          
-          historyList.appendChild(item);
-        }
-        
-        calcularHorasTrabalhadas();
-      }
-
-      function calcularHorasTrabalhadas() {
-        if (registrosHoje.length < 2) {
-          totalHoursEl.textContent = 'Horas trabalhadas: 00:00';
+        if (!navigator.geolocation) {
+          mapStatus.textContent = 'Geolocalização não suportada pelo navegador';
+          mapStatus.className = 'location-status invalid';
           return;
         }
-        
-        const registrosOrdenados = [...registrosHoje].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
-        let totalMs = 0;
-        let entradaAtual = null;
-        
-        for (const registro of registrosOrdenados) {
-          if (registro.tipo === 'entrada') {
-            entradaAtual = new Date(registro.timestamp).getTime();
-          } else if (entradaAtual) {
-            totalMs += (new Date(registro.timestamp).getTime() - entradaAtual);
-            entradaAtual = null;
-          }
-        }
-        
-        const totalHoras = Math.floor(totalMs / (1000 * 60 * 60));
-        const totalMinutos = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
-        
-        totalHoursEl.textContent = `Horas trabalhadas: ${String(totalHoras).padStart(2, '0')}:${String(totalMinutos).padStart(2, '0')}`;
-      }
 
-      function formatDate(date) {
-        return date.toLocaleDateString('pt-BR');
-      }
-
-      function formatTime(date) {
-        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
-
-      // Funções de Relatório
-      function openReportModal() {
-        const hoje = new Date().toISOString().split('T')[0];
-        document.getElementById('report-start').value = hoje;
-        document.getElementById('report-end').value = hoje;
-        reportModal.style.display = 'flex';
-      }
-
-      function closeReportModal() {
-        reportModal.style.display = 'none';
-      }
-
-      async function sendReport() {
-        const startDate = document.getElementById('report-start').value;
-        const endDate = document.getElementById('report-end').value;
-        
-        try {
-          const response = await fetch(`${API_BASE_URL}/registros/enviar-email`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              userId: currentUser.id,
-              startDate,
-              endDate
-            })
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            alert('Espelho de ponto enviado com sucesso!');
-            closeReportModal();
-          } else {
-            alert(data.message || 'Erro ao enviar espelho de ponto');
-          }
-        } catch (error) {
-          console.error('Erro:', error);
-          alert('Erro ao conectar com o servidor');
-        }
-      }
-
-      // Função para visualizar registros de colaborador
-      function verRegistrosColaborador(id) {
-        // Implementar a visualização dos registros do colaborador
-        alert(`Visualizar registros do colaborador ${id}`);
-      }
-
-      // Inicialização
-      async function checkAuth() {
-        const savedToken = localStorage.getItem('pontoToken');
-        const savedUser = localStorage.getItem('pontoUser');
-        
-        if (savedToken && savedUser) {
-          try {
-            const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-              headers: {
-                'Authorization': `Bearer ${savedToken}`
-              }
-            });
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
             
-            if (response.ok) {
-              token = savedToken;
-              currentUser = JSON.parse(savedUser);
-              isGestor = currentUser.isGestor || false;
-              
-              updateUIAfterLogin();
-              
-              if (isGestor) {
-                loadColaboradores();
-              } else {
-                await loadRegistrosHoje();
-                verificarLocalizacao();
-              }
-            } else {
-              logout();
+            document.getElementById('colaborador-latitude').value = lat;
+            document.getElementById('colaborador-longitude').value = lng;
+            
+            mapStatus.textContent = `Localização obtida: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            mapStatus.className = 'location-status valid';
+          },
+          (error) => {
+            let errorMessage;
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = "Permissão de localização negada pelo usuário";
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = "Informações de localização indisponíveis";
+                break;
+              case error.TIMEOUT:
+                errorMessage = "A requisição de localização expirou";
+                break;
+              case error.UNKNOWN_ERROR:
+                errorMessage = "Ocorreu um erro desconhecido";
+                break;
             }
-          } catch (error) {
-            console.error('Erro ao verificar autenticação:', error);
+            mapStatus.textContent = `Erro: ${errorMessage}`;
+            mapStatus.className = 'location-status invalid';
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
           }
-        }
+        );
       }
 
-      // Atribuir eventos
-      pontoBtn.addEventListener('click', baterPonto);
-
-      // Iniciar aplicação
+      // Event Listeners
       document.addEventListener('DOMContentLoaded', checkAuth);
+      
+      loginForm.addEventListener('submit', handleColaboradorLogin);
+      gestorLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        openGestorLoginModal();
+      });
+      gestorLoginForm.addEventListener('submit', handleGestorLogin);
+      document.getElementById('cancel-gestor-login').addEventListener('click', closeGestorLoginModal);
+      
+      primeiroAcessoGestor.addEventListener('click', (e) => {
+        e.preventDefault();
+        openGestorCadastroModal();
+      });
+      gestorCadastroForm.addEventListener('submit', handleGestorCadastro);
+      document.getElementById('cancel-gestor-cadastro').addEventListener('click', closeGestorCadastroModal);
+      
+      pontoBtn.addEventListener('click', baterPonto);
+      logoutBtn.addEventListener('click', logout);
+      sendReportBtn.addEventListener('click', openReportModal);
+      confirmReportBtn.addEventListener('click', handleSendReport);
+      document.getElementById('cancel-report').addEventListener('click', closeReportModal);
+      
+      justificativaBtn.addEventListener('click', openJustificativaModal);
+      document.getElementById('justificativa-form').addEventListener('submit', handleJustificativa);
+      document.getElementById('cancel-justificativa').addEventListener('click', closeJustificativaModal);
+      
+      addColaboradorBtn.addEventListener('click', openAddColaboradorModal);
+      refreshColaboradoresBtn.addEventListener('click', loadColaboradores);
+      configJornadaBtn.addEventListener('click', openConfigJornadaModal);
+      
+      colaboradorForm.addEventListener('submit', handleAddColaborador);
+      document.getElementById('cancel-add-colaborador').addEventListener('click', closeAddColaboradorModal);
+      obterLocalizacaoBtn.addEventListener('click', obterLocalizacao);
+      
+      document.getElementById('jornada-form').addEventListener('submit', handleConfigJornada);
+      document.getElementById('cancel-config-jornada').addEventListener('click', closeConfigJornadaModal);
     </script>
-  </body>
+</body>
 </html>
